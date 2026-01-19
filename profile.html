@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zync | Profile</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { 
+            background: radial-gradient(circle at top right, #064e3b, #020617); 
+            min-height: 100vh; 
+            color: #ecfdf5; 
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-card { 
+            background: rgba(255, 255, 255, 0.03); 
+            backdrop-filter: blur(20px); 
+            border: 1px solid rgba(16, 185, 129, 0.15); 
+        }
+        .neon-border {
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+        }
+        .multi-gradient {
+            background: linear-gradient(to right, #34d399, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .link-hover:hover {
+            background: rgba(16, 185, 129, 0.1);
+            transform: scale(1.02);
+            transition: all 0.2s ease;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-10">
+
+    <div id="loader" class="fixed inset-0 flex items-center justify-center bg-[#020617] z-50">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-emerald-500"></div>
+    </div>
+
+<div class="flex items-center justify-center gap-3 mt-4" data-aos="fade-in">
+    <div class="flex -space-x-2">
+        <img class="w-6 h-6 rounded-full border border-[#020617]" src="https://api.dicebear.com/7.x/avataaars/svg?seed=1">
+        <img class="w-6 h-6 rounded-full border border-[#020617]" src="https://api.dicebear.com/7.x/avataaars/svg?seed=2">
+        <img class="w-6 h-6 rounded-full border border-[#020617]" src="https://api.dicebear.com/7.x/avataaars/svg?seed=3">
+    </div>
+    <p class="text-[10px] font-bold text-emerald-400/80 uppercase tracking-tighter">
+        Join <span id="view-count-num">...</span> others who visited this Zync
+    </p>
+</div>
+
+
+    <div class="max-w-xl mx-auto space-y-8 pb-20">
+        
+        <header class="flex flex-col items-center text-center pt-8">
+            <div class="relative mb-6">
+                <div class="absolute inset-0 bg-emerald-500 blur-3xl opacity-20 rounded-full"></div>
+                <img id="profile-pic" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Zync" 
+                     class="relative w-32 h-32 rounded-full border-4 border-emerald-500/30 p-1 neon-border object-cover">
+            </div>
+            <h1 id="name" class="text-4xl font-black multi-gradient tracking-tight">Loading...</h1>
+            <p id="handle" class="text-emerald-400 font-mono text-sm mt-1">@username</p>
+            <p id="bio-text" class="text-gray-400 mt-4 px-6 leading-relaxed italic"></p>
+        </header>
+
+        <section id="links-area" class="space-y-3">
+            </section>
+
+        <section class="space-y-6 pt-6">
+            <h2 class="text-xs font-black text-center uppercase tracking-[0.3em] text-gray-500">My Favorites</h2>
+            
+            <div id="recs-grid" class="grid grid-cols-1 gap-4">
+                </div>
+        </section>
+
+        <footer class="text-center pt-12">
+            <a href="index.html" class="text-[10px] font-bold tracking-widest text-emerald-500/50 hover:text-emerald-500 transition uppercase">
+                Created with Zync
+            </a>
+        </footer>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://dkqafrwchifzpftxhqwp.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_lSLvTgFSNcTWxnZhpW2YQA_p1rEtRXw";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const iconMap = {
+            instagram: '📸', tiktok: '🎵', whatsapp: '💬', 
+            telegram: '✈️', spotify: '🎧', x: '🐦', youtube: '📺'
+        };
+
+        const catIcons = {
+            music: '🎧', app: '🚀', movie: '🎬', snack: '🍬'
+        };
+
+        async function loadProfile() {
+            // Get username from URL (e.g., profile.html?u=flexi)
+            const params = new URLSearchParams(window.location.search);
+            const username = params.get('u');
+
+            if (!username) {
+                document.body.innerHTML = "<div class='text-center mt-20 text-red-400'>No username provided!</div>";
+                return;
+            }
+
+            // 1. Fetch User Data
+            const { data: user, error: uErr } = await supabaseClient
+                .from('users')
+                .select('*')
+                .eq('username', username)
+                .single();
+
+            if (uErr || !user) {
+                document.getElementById('name').innerText = "User Not Found";
+                document.getElementById('loader').classList.add('hidden');
+                return;
+            }
+
+            // Set Header Info
+            document.getElementById('name').innerText = user.display_name || user.username;
+            document.getElementById('handle').innerText = `@${user.username}`;
+            document.getElementById('bio-text').innerText = user.bio || "No bio yet.";
+            if (user.avatar_url) document.getElementById('profile-pic').src = user.avatar_url;
+            document.title = `${user.display_name} | Zync`;
+
+            // 2. Fetch Social Links
+            const { data: links } = await supabaseClient.from('links').select('*').eq('user_id', user.id);
+            const linksContainer = document.getElementById('links-area');
+            linksContainer.innerHTML = links.map(l => `
+                <a href="${l.url}" target="_blank" class="glass-card flex items-center p-4 rounded-2xl link-hover">
+                    <span class="text-2xl mr-4">${iconMap[l.platform.toLowerCase()] || '🔗'}</span>
+                    <span class="font-bold text-sm tracking-wide">${l.platform}</span>
+                    <span class="ml-auto text-emerald-500 opacity-50">→</span>
+                </a>
+            `).join('');
+
+            // 3. Fetch Recommendations
+            const { data: recs } = await supabaseClient.from('recommendations').select('*').eq('user_id', user.id);
+            const recsContainer = document.getElementById('recs-grid');
+            recsContainer.innerHTML = recs.map(r => `
+                <div class="glass-card p-5 rounded-3xl border-l-4 border-emerald-500/50">
+                    <div class="flex justify-between items-start">
+                        <div class="flex gap-3">
+                            <span class="text-2xl opacity-80">${catIcons[r.category] || '⭐'}</span>
+                            <div>
+                                <p class="text-[10px] uppercase font-bold text-gray-500 tracking-wider">${r.category}</p>
+                                <h4 class="text-lg font-bold text-emerald-50">${r.name}</h4>
+                            </div>
+                        </div>
+                        <div class="text-emerald-400 font-bold bg-emerald-500/10 px-3 py-1 rounded-full text-xs">
+                            ${'⭐'.repeat(r.rating)}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Remove Loader
+            document.getElementById('loader').classList.add('hidden');
+        }
+
+        loadProfile();
+        async function trackVisitor(userId) {
+    // This increments the 'views' column in your 'users' table by 1
+    const { data, error } = await supabaseClient.rpc('increment_views', { user_id_input: userId });
+    
+    // Fetch the new count to display
+    const { data: user } = await supabaseClient
+        .from('users')
+        .select('views')
+        .eq('id', userId)
+        .single();
+    
+    if (user) {
+        document.getElementById('view-count-num').innerText = user.views.toLocaleString();
+    }
+}
+
+// Call this inside your existing loadProfile() function after you get the user ID
+// trackVisitor(user.id);
+
+    </script>
+</body>
+</html>

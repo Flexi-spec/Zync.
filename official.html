@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zync | Official Vision</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <style>
+        body {
+            background: #020617;
+            background-image: radial-gradient(circle at top right, #064e3b, transparent 40%),
+                              radial-gradient(at bottom left, #1e1b4b, transparent 40%);
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(16, 185, 129, 0.1);
+        }
+
+        .hero-gradient {
+            background: linear-gradient(135deg, #34d399 0%, #3b82f6 50%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .owner-badge {
+            background: linear-gradient(to right, rgba(16, 185, 129, 0.2), transparent);
+            border-left: 4px solid #10b981;
+        }
+
+        .manifesto-line {
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(16, 185, 129, 0.5), transparent);
+        }
+    </style>
+</head>
+<body class="overflow-x-hidden">
+
+    <nav class="fixed w-full z-50 p-6 flex justify-between items-center backdrop-blur-md">
+        <div class="text-2xl font-black tracking-tighter hero-gradient">ZYNC OFFICIAL</div>
+        <a href="index.html" class="text-[10px] font-bold uppercase tracking-widest border border-white/10 px-4 py-2 rounded-lg hover:bg-white hover:text-black transition">Return to Hub</a>
+    </nav>
+
+    <section class="pt-40 pb-20 px-6 max-w-5xl mx-auto text-center">
+        <h1 data-aos="fade-up" class="text-5xl md:text-8xl font-black mb-8 leading-none">
+            ALWAYS IN <br> <span class="hero-gradient">ZYNC.</span>
+        </h1>
+        <div class="manifesto-line w-full mb-12" data-aos="zoom-in"></div>
+        <p data-aos="fade-up" data-aos-delay="100" class="text-xl text-slate-400 font-medium max-w-2xl mx-auto leading-relaxed italic">
+            "Your digital presence is scattered. Your music is here, your social life is there, your vibe is everywhere. Zync is the force that pulls them into one orbit."
+        </p>
+    </section>
+
+    <section class="py-20 px-6 max-w-6xl mx-auto">
+        <div class="glass-card rounded-[3rem] overflow-hidden grid grid-cols-1 md:grid-cols-2">
+            <div class="p-12 flex flex-col justify-center" data-aos="fade-right">
+                <div class="owner-badge px-4 py-2 mb-6 inline-block">
+                    <span class="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-400">Owner & Architect</span>
+                </div>
+                <h2 class="text-4xl font-black mb-6">Built by <span class="text-emerald-500">Flexi</span></h2>
+                <p class="text-slate-400 leading-relaxed mb-6 text-lg">
+                    Recognized as the topmost authority in the Zync ecosystem. Flexi envisioned a world where profiles aren't just lists, but extensions of a person's frequency.
+                </p>
+                <div class="flex gap-4">
+                    <div class="text-center bg-white/5 p-4 rounded-2xl flex-1">
+                        <p class="text-2xl font-bold text-white">100%</p>
+                        <p class="text-[10px] uppercase font-bold text-emerald-500">Original</p>
+                    </div>
+                    <div class="text-center bg-white/5 p-4 rounded-2xl flex-1">
+                        <p class="text-2xl font-bold text-white">01</p>
+                        <p class="text-[10px] uppercase font-bold text-blue-500">Vision</p>
+                    </div>
+                </div>
+            </div>
+            <div class="relative min-h-[400px] bg-emerald-900/20" data-aos="fade-left">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Flexi" class="absolute inset-0 w-full h-full object-cover p-12 opacity-80">
+            </div>
+        </div>
+    </section>
+
+    <section class="py-24 px-6 max-w-6xl mx-auto">
+        <h2 class="text-center text-[10px] font-black tracking-[0.5em] text-emerald-500 uppercase mb-12">The Zync Ideology</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="glass-card p-10 rounded-3xl hover:border-emerald-500/50 transition duration-500" data-aos="fade-up">
+                <h3 class="text-2xl font-bold mb-4">Digital Frequency</h3>
+                <p class="text-slate-500 text-sm leading-relaxed">
+                    We believe your profile should pulse. From the music you play to the apps you rate, Zync is designed to capture your frequency in real-time.
+                </p>
+            </div>
+            <div class="glass-card p-10 rounded-3xl hover:border-blue-500/50 transition duration-500" data-aos="fade-up" data-aos-delay="100">
+                <h3 class="text-2xl font-bold mb-4">Morphic Design</h3>
+                <p class="text-slate-500 text-sm leading-relaxed">
+                    Why look like everyone else? Our glass-morphic interface adapts to your vibe, ensuring you remain the center of attention.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-32 text-center" data-aos="zoom-in">
+        <div class="max-w-xl mx-auto">
+            <h4 class="text-5xl font-black hero-gradient mb-4">Always in Zync.</h4>
+            <p class="text-slate-600 font-mono text-xs uppercase tracking-widest">— Signed by Flexi, The Originator</p>
+        </div>
+    </section>
+
+    <footer class="py-12 border-t border-white/5 text-center">
+        <p class="text-[10px] font-bold text-slate-700 tracking-[1em] uppercase">Authorized by Zync Protocol v1.0</p>
+    </footer>
+
+    <script>
+        AOS.init({ duration: 1000, once: true });
+    </script>
+</body>
+</html>

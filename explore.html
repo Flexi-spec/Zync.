@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explore | Zync Discovery</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: radial-gradient(circle at bottom right, #064e3b, #020617);
+            min-height: 100vh;
+            color: #ecfdf5;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(16, 185, 129, 0.1);
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            border-color: rgba(16, 185, 129, 0.5);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        .search-glow:focus {
+            box-shadow: 0 0 20px rgba(52, 211, 153, 0.2);
+            border-color: #34d399;
+        }
+    </style>
+</head>
+<body class="p-6">
+
+    <header class="max-w-6xl mx-auto mb-12 text-center pt-10">
+        <h1 class="text-4xl md:text-5xl font-black mb-4">Discover <span class="text-emerald-400">Zyncers</span></h1>
+        <p class="text-gray-400 mb-8">Find people with the same taste in music, apps, and snacks.</p>
+        
+        <div class="relative max-w-xl mx-auto">
+            <input type="text" id="search-input" placeholder="Search by username or bio..." 
+                   class="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none search-glow transition-all pl-14">
+            <span class="absolute left-5 top-5 text-gray-500">🔍</span>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-xl font-bold border-l-4 border-emerald-500 pl-4">Featured Profiles</h2>
+            <div class="flex gap-2">
+                <button class="px-4 py-2 bg-emerald-500/10 text-emerald-400 rounded-lg text-sm border border-emerald-500/20">All</button>
+                <button class="px-4 py-2 bg-white/5 text-gray-400 rounded-lg text-sm border border-white/10 hover:bg-white/10">Music</button>
+                <button class="px-4 py-2 bg-white/5 text-gray-400 rounded-lg text-sm border border-white/10 hover:bg-white/10">Tech</button>
+            </div>
+        </div>
+
+        <div id="profiles-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <a href="profile.html?u=flexi" class="glass-card p-6 rounded-3xl flex items-center gap-4">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Flexi" class="w-16 h-16 rounded-full bg-emerald-900/50">
+                <div>
+                    <h3 class="font-bold text-lg">Flexi</h3>
+                    <p class="text-emerald-400 text-sm font-mono">@flexi</p>
+                    <p class="text-gray-500 text-xs mt-1 italic">"Hooked on Matcha & Lo-fi"</p>
+                </div>
+            </a>
+
+            <a href="profile.html?u=zync_dev" class="glass-card p-6 rounded-3xl flex items-center gap-4">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Zync" class="w-16 h-16 rounded-full bg-blue-900/50">
+                <div>
+                    <h3 class="font-bold text-lg">Zync Dev</h3>
+                    <p class="text-blue-400 text-sm font-mono">@zync_dev</p>
+                    <p class="text-gray-500 text-xs mt-1 italic">"Building the future of links."</p>
+                </div>
+            </a>
+        </div>
+    </main>
+
+    <script>
+        const SUPABASE_URL = "https://dkqafrwchifzpftxhqwp.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_lSLvTgFSNcTWxnZhpW2YQA_p1rEtRXw";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Function to fetch and display all users
+        async function loadExplore() {
+            const { data: users, error } = await supabaseClient
+                .from('users')
+                .select('*')
+                .limit(20);
+
+            if (users) {
+                const grid = document.getElementById('profiles-grid');
+                // You would map through users and generate HTML here
+            }
+        }
+
+        // Search Logic
+        document.getElementById('search-input').addEventListener('input', async (e) => {
+            const query = e.target.value;
+            // logic to filter users by username using .ilike() in Supabase
+        });
+
+        loadExplore();
+    </script>
+</body>
+</html>
