@@ -14,12 +14,20 @@
                               radial-gradient(at bottom left, #1e1b4b, transparent 40%);
             color: #f8fafc;
             font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
         }
 
         .glass-card {
             background: rgba(255, 255, 255, 0.02);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(16, 185, 129, 0.1);
+            transition: all 0.4s ease;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(16, 185, 129, 0.5);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         .hero-gradient {
@@ -37,15 +45,68 @@
             height: 1px;
             background: linear-gradient(to right, transparent, rgba(16, 185, 129, 0.5), transparent);
         }
+
+        /* Floating AI button */
+        .floating-ai-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            border-radius: 9999px;
+            background: rgba(16, 185, 129, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .floating-ai-btn:hover {
+            transform: scale(1.05) translateY(-5px);
+            background: rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.6);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+        }
+
+        .ai-pulse {
+            width: 12px;
+            height: 12px;
+            background: #34d399;
+            border-radius: 50%;
+            position: relative;
+        }
+        .ai-pulse::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #34d399;
+            border-radius: 50%;
+            animation: pulse-ring 2s infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.5); opacity: 0.8; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
     </style>
 </head>
-<body class="overflow-x-hidden">
+<body>
 
-    <nav class="fixed w-full z-50 p-6 flex justify-between items-center backdrop-blur-md">
+    <!-- Floating AI Button -->
+    <a href="ai-chat.html" class="floating-ai-btn group">
+        <div class="ai-pulse"></div>
+        <span class="text-[10px] font-black uppercase tracking-widest text-emerald-400 group-hover:text-white transition">Talk to Zync AI</span>
+    </a>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 p-6 flex justify-between items-center backdrop-blur-md bg-black/30 border-b border-white/5">
         <div class="text-2xl font-black tracking-tighter hero-gradient">ZYNC OFFICIAL</div>
         <a href="index.html" class="text-[10px] font-bold uppercase tracking-widest border border-white/10 px-4 py-2 rounded-lg hover:bg-white hover:text-black transition">Return to Hub</a>
     </nav>
 
+    <!-- Hero Section -->
     <section class="pt-40 pb-20 px-6 max-w-5xl mx-auto text-center">
         <h1 data-aos="fade-up" class="text-5xl md:text-8xl font-black mb-8 leading-none">
             ALWAYS IN <br> <span class="hero-gradient">ZYNC.</span>
@@ -56,6 +117,7 @@
         </p>
     </section>
 
+    <!-- Owner Section -->
     <section class="py-20 px-6 max-w-6xl mx-auto">
         <div class="glass-card rounded-[3rem] overflow-hidden grid grid-cols-1 md:grid-cols-2">
             <div class="p-12 flex flex-col justify-center" data-aos="fade-right">
@@ -83,24 +145,30 @@
         </div>
     </section>
 
+    <!-- Ideology Section with Counters -->
     <section class="py-24 px-6 max-w-6xl mx-auto">
         <h2 class="text-center text-[10px] font-black tracking-[0.5em] text-emerald-500 uppercase mb-12">The Zync Ideology</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div class="glass-card p-10 rounded-3xl hover:border-emerald-500/50 transition duration-500" data-aos="fade-up">
+            <div class="glass-card p-10 rounded-3xl hover:border-emerald-500/50 transition duration-500 transform hover:-translate-y-2" data-aos="fade-up">
                 <h3 class="text-2xl font-bold mb-4">Digital Frequency</h3>
-                <p class="text-slate-500 text-sm leading-relaxed">
+                <p class="text-slate-500 text-sm leading-relaxed mb-4">
                     We believe your profile should pulse. From the music you play to the apps you rate, Zync is designed to capture your frequency in real-time.
                 </p>
+                <p class="text-emerald-400 font-black text-3xl counter" data-target="12400">0</p>
+                <p class="text-[10px] uppercase tracking-widest text-slate-400">Active Zyncers</p>
             </div>
-            <div class="glass-card p-10 rounded-3xl hover:border-blue-500/50 transition duration-500" data-aos="fade-up" data-aos-delay="100">
+            <div class="glass-card p-10 rounded-3xl hover:border-blue-500/50 transition duration-500 transform hover:-translate-y-2" data-aos="fade-up" data-aos-delay="100">
                 <h3 class="text-2xl font-bold mb-4">Morphic Design</h3>
-                <p class="text-slate-500 text-sm leading-relaxed">
+                <p class="text-slate-500 text-sm leading-relaxed mb-4">
                     Why look like everyone else? Our glass-morphic interface adapts to your vibe, ensuring you remain the center of attention.
                 </p>
+                <p class="text-blue-400 font-black text-3xl counter" data-target="85000">0</p>
+                <p class="text-[10px] uppercase tracking-widest text-slate-400">Links Rated</p>
             </div>
         </div>
     </section>
 
+    <!-- Closing Section -->
     <section class="py-32 text-center" data-aos="zoom-in">
         <div class="max-w-xl mx-auto">
             <h4 class="text-5xl font-black hero-gradient mb-4">Always in Zync.</h4>
@@ -108,12 +176,31 @@
         </div>
     </section>
 
+    <!-- Footer -->
     <footer class="py-12 border-t border-white/5 text-center">
         <p class="text-[10px] font-bold text-slate-700 tracking-[1em] uppercase">Authorized by Zync Protocol v1.0</p>
     </footer>
 
+    <!-- Scripts -->
     <script>
         AOS.init({ duration: 1000, once: true });
+
+        // Animated Counters
+        const counters = document.querySelectorAll('.counter');
+        counters.forEach(counter => {
+            const updateCount = () => {
+                const target = +counter.getAttribute('data-target');
+                const count = +counter.innerText.replace(/[+,]/g, '');
+                const inc = Math.ceil(target / 200);
+                if(count < target){
+                    counter.innerText = (count + inc).toLocaleString() + '+';
+                    setTimeout(updateCount, 20);
+                } else {
+                    counter.innerText = target.toLocaleString() + '+';
+                }
+            }
+            updateCount();
+        });
     </script>
 </body>
 </html>
