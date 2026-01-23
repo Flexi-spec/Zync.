@@ -1,164 +1,165 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Zync AI | Studio</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-        
-        body {
-            background: #020617;
-            color: #f8fafc;
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Zync AI | Studio</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
 
-        .glass-bg {
-            background: rgba(255, 255, 255, 0.02);
-            backdrop-filter: blur(20px);
-        }
+    body {
+        background: #020617;
+        color: #f8fafc;
+        font-family: 'Inter', sans-serif;
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
 
-        .chat-container::-webkit-scrollbar {
-            width: 5px;
-        }
-        .chat-container::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-        }
+    .glass-bg {
+        background: rgba(255, 255, 255, 0.02);
+        backdrop-filter: blur(20px);
+    }
 
-        .message-ai {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
+    .chat-container::-webkit-scrollbar {
+        width: 5px;
+    }
+    .chat-container::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+    }
 
-        .input-area {
-            background: linear-gradient(to top, #020617 80%, transparent);
-        }
+    .message-ai {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
 
-        /* Clean, non-green glow for the owner focus */
-        .owner-highlight {
-            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-    </style>
+    .input-area {
+        background: linear-gradient(to top, #020617 80%, transparent);
+    }
+
+    .owner-highlight {
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 700;
+    }
+
+    .message-user {
+        background: rgba(59, 130, 246, 0.2);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+</style>
 </head>
 <body class="overflow-hidden">
 
-    <header class="glass-bg border-b border-white/5 p-4 flex justify-between items-center z-50">
-        <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-black text-white text-xs">Z</div>
-            <span class="font-bold tracking-tight">Zync AI <span class="text-[10px] opacity-40 ml-2 uppercase tracking-widest">v2.0</span></span>
+<header class="glass-bg border-b border-white/5 p-4 flex justify-between items-center z-50">
+    <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-black text-white text-xs">Z</div>
+        <span class="font-bold tracking-tight">Zync AI <span class="text-[10px] opacity-40 ml-2 uppercase tracking-widest">v2.0</span></span>
+    </div>
+    <div class="flex items-center gap-6">
+        <span class="text-[10px] font-bold opacity-30 uppercase tracking-widest hidden md:block">Architect: Flexi</span>
+        <a href="index.html" class="px-4 py-2 rounded-full border border-white/10 text-[11px] font-bold hover:bg-white hover:text-black transition">Exit</a>
+    </div>
+</header>
+
+<main id="chat-flow" class="flex-1 overflow-y-auto chat-container p-6 md:p-20 space-y-8">
+    <div class="flex gap-4 max-w-3xl mx-auto items-start">
+        <div class="w-8 h-8 rounded-full bg-white/10 flex-shrink-0 flex items-center justify-center text-xs">AI</div>
+        <div class="message-ai p-6 rounded-2xl rounded-tl-none">
+            <p class="text-sm leading-relaxed text-slate-300">
+                Welcome to the Zync Studio. I am your neural link to the platform. 
+                Ask me anything about your vibe, your links, or the vision of <span class="owner-highlight">Flexi</span>.
+            </p>
         </div>
-        <div class="flex items-center gap-6">
-            <span class="text-[10px] font-bold opacity-30 uppercase tracking-widest hidden md:block">Architect: Flexi</span>
-            <a href="index.html" class="px-4 py-2 rounded-full border border-white/10 text-[11px] font-bold hover:bg-white hover:text-black transition">Exit</a>
-        </div>
-    </header>
+    </div>
+</main>
 
-    <main id="chat-flow" class="flex-1 overflow-y-auto chat-container p-6 md:p-20 space-y-8">
-        <div class="flex gap-4 max-w-3xl mx-auto items-start">
-            <div class="w-8 h-8 rounded-full bg-white/10 flex-shrink-0 flex items-center justify-center text-xs">AI</div>
-            <div class="message-ai p-6 rounded-2xl rounded-tl-none">
-                <p class="text-sm leading-relaxed text-slate-300">
-                    Welcome to the Zync Studio. I am your neural link to the platform. 
-                    Ask me anything about your vibe, your links, or the vision of <span class="owner-highlight font-bold">Flexi</span>.
-                </p>
-            </div>
-        </div>
-    </main>
+<footer class="input-area p-6 pb-10">
+    <div class="max-w-3xl mx-auto relative">
+        <form id="ai-form" class="relative">
+            <textarea id="user-input" rows="1" placeholder="Message Zync AI..." 
+                class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 pr-16 outline-none focus:border-white/20 transition resize-none text-sm text-white placeholder:text-slate-500"></textarea>
+            <button type="submit" class="absolute right-3 top-3 p-2 bg-white text-black rounded-xl hover:opacity-80 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+            </button>
+        </form>
+        <p class="text-[10px] text-center mt-4 opacity-20 uppercase tracking-tighter">Powered by Zync Neural Shards • Official Access Only</p>
+    </div>
+</footer>
 
-    <footer class="input-area p-6 pb-10">
-        <div class="max-w-3xl mx-auto relative">
-            <form id="ai-form" class="relative">
-                <textarea id="user-input" rows="1" placeholder="Message Zync AI..." 
-                    class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 pr-16 outline-none focus:border-white/20 transition resize-none text-sm text-white placeholder:text-slate-500"></textarea>
-                <button type="submit" class="absolute right-3 top-3 p-2 bg-white text-black rounded-xl hover:opacity-80 transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
-                </button>
-            </form>
-            <p class="text-[10px] text-center mt-4 opacity-20 uppercase tracking-tighter">Powered by Zync Neural Shards • Official Access Only</p>
-        </div>
-    </footer>
+<script>
+const chatFlow = document.getElementById('chat-flow');
+const aiForm = document.getElementById('ai-form');
+const userInput = document.getElementById('user-input');
 
-    <script>
-        const chatFlow = document.getElementById('chat-flow');
-        const aiForm = document.getElementById('ai-form');
-        const userInput = document.getElementById('user-input');
+const API_KEY = "YOUR_OPENAI_KEY"; // Keep this hidden in production!
 
-        const API_KEY = "YOUR_OPENAI_KEY"; // Keep this hidden in production!
+const SYSTEM_PROMPT = `You are Zync AI. 
+Owner/Architect: Flexi. 
+Tone: Professional, helpful, sleek, and high-end. 
+Mission: Assist users with link-in-bio setups and platform questions. 
+If anyone mentions Flexi, treat him as the ultimate recognized owner.`;
 
-        const SYSTEM_PROMPT = `You are Zync AI. 
-        Owner/Architect: Flexi. 
-        Tone: Professional, helpful, sleek, and high-end. 
-        Mission: Assist users with link-in-bio setups and platform questions. 
-        If anyone mentions Flexi, treat him as the ultimate recognized owner.`;
+aiForm.onsubmit = async (e) => {
+    e.preventDefault();
+    const msg = userInput.value.trim();
+    if(!msg) return;
 
-        aiForm.onsubmit = async (e) => {
-            e.preventDefault();
-            const msg = userInput.value.trim();
-            if(!msg) return;
+    appendMsg(msg, 'user');
+    userInput.value = '';
 
-            // Add User Message UI
-            appendMsg(msg, 'user');
-            userInput.value = '';
+    const loadId = appendMsg('...', 'ai');
 
-            // Loading state
-            const loadId = appendMsg('...', 'ai');
-
-            try {
-                const res = await fetch('https://api.openai.com/v1/chat/completions', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
-                    body: JSON.stringify({
-                        model: "gpt-3.5-turbo",
-                        messages: [{role: "system", content: SYSTEM_PROMPT}, {role: "user", content: msg}]
-                    })
-                });
-                const data = await res.json();
-                document.getElementById(loadId).remove();
-                appendMsg(data.choices[0].message.content, 'ai');
-            } catch (err) {
-                document.getElementById(loadId).innerText = "Connection Error.";
-            }
-        };
-
-        function appendMsg(text, sender) {
-            const id = 'msg-' + Date.now();
-            const wrapper = document.createElement('div');
-            wrapper.className = `flex gap-4 max-w-3xl mx-auto items-start ${sender === 'user' ? 'flex-row-reverse' : ''}`;
-            wrapper.id = id;
-
-            const icon = sender === 'user' 
-                ? '<div class="w-8 h-8 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center text-[10px] font-bold">ME</div>'
-                : '<div class="w-8 h-8 rounded-full bg-white/10 flex-shrink-0 flex items-center justify-center text-[10px]">AI</div>';
-
-            const contentClass = sender === 'user' 
-                ? 'bg-blue-600/20 border border-blue-500/20' 
-                : 'message-ai';
-
-            wrapper.innerHTML = `
-                ${icon}
-                <div class="${contentClass} p-5 rounded-2xl text-sm leading-relaxed text-slate-200">
-                    ${text}
-                </div>
-            `;
-            
-            chatFlow.appendChild(wrapper);
-            chatFlow.scrollTop = chatFlow.scrollHeight;
-            return id;
-        }
-
-        // Auto-resize textarea
-        userInput.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = (this.scrollHeight) + 'px';
+    try {
+        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
+            body: JSON.stringify({
+                model: "gpt-3.5-turbo",
+                messages: [{role: "system", content: SYSTEM_PROMPT}, {role: "user", content: msg}]
+            })
         });
-    </script>
+        const data = await res.json();
+        document.getElementById(loadId).remove();
+        appendMsg(data.choices[0].message.content, 'ai');
+    } catch (err) {
+        document.getElementById(loadId).innerText = "Connection Error.";
+    }
+};
+
+function appendMsg(text, sender) {
+    const id = 'msg-' + Date.now();
+    const wrapper = document.createElement('div');
+    wrapper.className = `flex gap-4 max-w-3xl mx-auto items-start ${sender === 'user' ? 'flex-row-reverse' : ''}`;
+    wrapper.id = id;
+
+    const icon = sender === 'user' 
+        ? '<div class="w-8 h-8 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center text-[10px] font-bold">ME</div>'
+        : '<div class="w-8 h-8 rounded-full bg-white/10 flex-shrink-0 flex items-center justify-center text-[10px]">AI</div>';
+
+    const contentClass = sender === 'user' ? 'message-user p-5 rounded-2xl text-sm leading-relaxed text-slate-200' : 'message-ai p-5 rounded-2xl text-sm leading-relaxed text-slate-200';
+
+    wrapper.innerHTML = `
+        ${icon}
+        <div class="${contentClass}">
+            ${text}
+        </div>
+    `;
+
+    chatFlow.appendChild(wrapper);
+    chatFlow.scrollTo({ top: chatFlow.scrollHeight, behavior: 'smooth' });
+    return id;
+}
+
+// Auto-resize textarea
+userInput.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = (this.scrollHeight) + 'px';
+});
+</script>
 </body>
 </html>
