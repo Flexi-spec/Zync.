@@ -1,83 +1,133 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zync | Join the Vibe</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background: radial-gradient(circle at top left, #064e3b, #020617); min-height: 100vh; color: #ecfdf5; }
-        .glass-box { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(16, 185, 129, 0.2); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zync | Join the Vibe</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { 
+      background: radial-gradient(circle at top left, #064e3b, #020617); 
+      min-height: 100vh; 
+      color: #ecfdf5; 
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+  }
+  .glass-box { 
+      background: rgba(255,255,255,0.03); 
+      backdrop-filter: blur(15px); 
+      border: 1px solid rgba(16,185,129,0.2); 
+      width: 100%;
+      max-width: 400px;
+      padding: 2.5rem;
+      border-radius: 2rem;
+      box-shadow: 0 0 40px rgba(0,0,0,0.5);
+  }
+  input { transition: all 0.2s; }
+  input:focus { border-color: #10b981; }
+  button { transition: all 0.2s; }
+</style>
 </head>
-<body class="flex items-center justify-center p-6">
+<body>
 
-    <div class="glass-box w-full max-w-md p-10 rounded-[2rem] shadow-2xl">
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-black text-emerald-400 tracking-tighter">ZYNC</h1>
-            <p class="text-gray-400 mt-2">Create your aesthetic profile in seconds.</p>
-        </div>
-
-        <div class="space-y-4">
-            <input id="email" type="email" placeholder="Email Address" 
-                   class="w-full bg-emerald-900/20 border border-emerald-500/30 p-4 rounded-2xl outline-none focus:border-emerald-400">
-            
-            <input id="password" type="password" placeholder="Password" 
-                   class="w-full bg-emerald-900/20 border border-emerald-500/30 p-4 rounded-2xl outline-none focus:border-emerald-400">
-
-            <button onclick="handleAuth('signIn')" class="w-full bg-emerald-500 text-black font-bold p-4 rounded-2xl hover:bg-emerald-400 transition">
-                Sign In
-            </button>
-            
-            <button onclick="handleAuth('signUp')" class="w-full text-emerald-400 text-sm font-medium border border-emerald-500/20 p-4 rounded-2xl hover:bg-emerald-500/10">
-                Create New Account
-            </button>
-        </div>
-
-        <p id="msg" class="text-center mt-6 text-xs text-emerald-300 hidden"></p>
+<div class="glass-box">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-black text-emerald-400 tracking-tighter">ZYNC</h1>
+        <p class="text-gray-400 mt-2">Create your aesthetic profile in seconds.</p>
     </div>
 
-    <script>
-        const SUPABASE_URL = "https://dkqafrwchifzpftxhqwp.supabase.co";
-        const SUPABASE_KEY = "sb_publishable_lSLvTgFSNcTWxnZhpW2YQA_p1rEtRXw";
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    <div class="space-y-4">
+        <input id="signup-username" type="text" placeholder="Username"
+               class="w-full bg-emerald-900/20 border border-emerald-500/30 p-4 rounded-2xl outline-none">
 
-        async function handleAuth(type) {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const msg = document.getElementById('msg');
-            
-            msg.innerText = "Processing...";
+        <input id="email" type="email" placeholder="Email Address"
+               class="w-full bg-emerald-900/20 border border-emerald-500/30 p-4 rounded-2xl outline-none">
+
+        <input id="password" type="password" placeholder="Password"
+               class="w-full bg-emerald-900/20 border border-emerald-500/30 p-4 rounded-2xl outline-none">
+
+        <button onclick="handleAuth('signIn')" class="w-full bg-emerald-500 text-black font-bold p-4 rounded-2xl hover:bg-emerald-400">
+            Sign In
+        </button>
+
+        <button onclick="handleAuth('signUp')" class="w-full text-emerald-400 text-sm font-medium border border-emerald-500/20 p-4 rounded-2xl hover:bg-emerald-500/10">
+            Create New Account
+        </button>
+    </div>
+
+    <p id="msg" class="text-center mt-6 text-xs text-emerald-300 hidden"></p>
+</div>
+
+<script>
+    // Supabase
+    const SUPABASE_URL = "https://dkqafrwchifzpftxhqwp.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_lSLvTgFSNcTWxnZhpW2YQA_p1rEtRXw";
+    const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function handleAuth(type) {
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const username = document.getElementById('signup-username').value.trim();
+        const msg = document.getElementById('msg');
+
+        if(type === 'signUp' && username.length < 3){
+            msg.innerText = "Username must be at least 3 characters";
+            msg.className = "text-center mt-6 text-xs text-red-400";
             msg.classList.remove('hidden');
+            return;
+        }
 
-            const { data, error } = type === 'signUp' 
-                ? await supabase.auth.signUp({ email, password })
-                : await supabase.auth.signInWithPassword({ email, password });
+        msg.innerText = "Processing...";
+        msg.className = "text-center mt-6 text-xs text-emerald-300";
+        msg.classList.remove('hidden');
 
-            if (error) {
-                msg.innerText = error.message;
-                msg.classList.add('text-red-400');
-            } else {
-                msg.innerText = type === 'signUp' ? "Check your email for the link!" : "Redirecting...";
-                if(type === 'signIn') window.location.href = 'dashboard.html';
+        let response;
+        if(type === 'signUp'){
+            // Check if username exists
+            const { data: existing, error: checkErr } = await supabase.from('users').select('username').eq('username', username).single();
+            if(existing){
+                msg.innerText = "Username already taken";
+                msg.className = "text-center mt-6 text-xs text-red-400";
+                return;
+            }
+
+            // Create new user
+            response = await supabase.auth.signUp({ email, password });
+            if(!response.error){
+                // Insert username into users table
+                await supabase.from('users').insert({ username });
+                msg.innerText = "Account created! Check email for confirmation";
+            }
+        } else {
+            // Sign in
+            response = await supabase.auth.signInWithPassword({ email, password });
+            if(!response.error){
+                msg.innerText = "Redirecting...";
+                setTimeout(()=> window.location.href='dashboard.html', 500);
             }
         }
-        window.onload = () => {
-    const claimedName = localStorage.getItem('zync_claimed_username');
-    const usernameInput = document.getElementById('signup-username'); // Make sure your signup input has this ID
-    
-    if (claimedName && usernameInput) {
-        usernameInput.value = claimedName;
-        // Optional: Clear it after use so it doesn't stay there forever
-        localStorage.removeItem('zync_claimed_username');
-        
-        // Visual cue that the name is reserved
-        usernameInput.classList.add('border-emerald-500');
-        console.log("Username reserved: " + claimedName);
-    }
-};
 
-    </script>
+        if(response.error){
+            msg.innerText = response.error.message;
+            msg.className = "text-center mt-6 text-xs text-red-400";
+        }
+    }
+
+    // Prefill claimed username if coming from landing
+    window.onload = () => {
+        const claimedName = localStorage.getItem('zync_claimed_username');
+        const usernameInput = document.getElementById('signup-username');
+        if(claimedName && usernameInput){
+            usernameInput.value = claimedName;
+            localStorage.removeItem('zync_claimed_username');
+            usernameInput.classList.add('border-emerald-500');
+            console.log("Reserved username: " + claimedName);
+        }
+    }
+</script>
 </body>
 </html>
