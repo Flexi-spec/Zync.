@@ -3,11 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zync | Sync Your Vibe</title>
+<title>Zync | Ghost Protocol</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- 1. ADD ABLY SDK -->
+<script src="https://cdn.ably.com"></script>
 <style>
   body {
       background: radial-gradient(circle at bottom right, #064e3b, #020617);
@@ -22,59 +23,18 @@
       border: 1px solid rgba(16, 185, 129, 0.1);
       transition: all 0.3s ease;
   }
-  .glass-card:hover {
-      border-color: rgba(16, 185, 129, 0.5);
-      transform: translateY(-5px);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  }
   .zync-title {
       background: linear-gradient(to right, #34d399, #60a5fa);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 0 10px rgba(52, 211, 153, 0.3));
   }
   .cta-button {
       background: rgba(16, 185, 129, 0.1);
       border: 1px solid rgba(16, 185, 129, 0.4);
-      transition: all 0.3s ease;
-  }
-  .cta-button:hover {
-      background: #10b981;
-      color: #020617;
-      box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
   }
   .nav-blur {
       background: rgba(2, 6, 23, 0.7);
       backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  }
-  [data-aos] { pointer-events: none; visibility: hidden; }
-  .aos-animate { pointer-events: auto; visibility: visible; }
-  .claim-btn { flex-shrink: 0; white-space: nowrap; }
-  .floating-ai-btn {
-      position: fixed; bottom: 30px; right: 30px; z-index:100;
-      display:flex; align-items:center; gap:12px;
-      padding:12px 20px; border-radius:9999px;
-      background: rgba(16,185,129,0.1); backdrop-filter: blur(15px);
-      border:1px solid rgba(16,185,129,0.3);
-      box-shadow: 0 0 20px rgba(16,185,129,0.2);
-      transition: all 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
-  }
-  .floating-ai-btn:hover {
-      transform: scale(1.05) translateY(-5px);
-      background: rgba(16,185,129,0.2);
-      border-color: rgba(16,185,129,0.6);
-      box-shadow: 0 10px 30px rgba(16,185,129,0.4);
-  }
-  .ai-pulse {
-      width: 12px; height:12px; background:#34d399; border-radius:50%; position:relative;
-  }
-  .ai-pulse::after {
-      content:''; position:absolute; width:100%; height:100%; background:#34d399; border-radius:50%;
-      animation: pulse-ring 2s infinite;
-  }
-  @keyframes pulse-ring {
-      0%{transform:scale(0.5); opacity:0.8;} 100%{transform:scale(2.5); opacity:0;}
   }
 </style>
 </head>
@@ -84,8 +44,8 @@
   <div class="max-w-6xl mx-auto flex justify-between items-center">
       <div class="text-2xl font-black tracking-tighter zync-title">ZYNC</div>
       <div class="flex gap-4">
-          <a href="explore.html" class="text-[10px] font-bold uppercase tracking-widest opacity-50 pt-2 hover:opacity-100 transition">Explore</a>
-          <a href="login.html" class="cta-button px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest">Login</a>
+          <div id="connection-status" class="text-[10px] font-bold uppercase tracking-widest text-emerald-500 opacity-50 pt-2">Offline</div>
+          <a href="#" class="cta-button px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest">Dashboard</a>
       </div>
   </div>
 </nav>
@@ -93,111 +53,92 @@
 <section class="pt-48 pb-20 px-6">
   <div class="max-w-4xl mx-auto text-center">
       <h1 data-aos="fade-up" class="text-6xl md:text-8xl font-black mb-6 tracking-tight leading-none">
-          Your entire vibe. <br> <span class="zync-title italic">Synced.</span>
+          Professional. <br> <span class="zync-title italic">One-Time.</span>
       </h1>
-      <p data-aos="fade-up" data-aos-delay="100" class="text-gray-400 text-lg md:text-xl max-w-xl mx-auto mb-10 leading-relaxed">
-          The ultimate link-in-bio for creators. Share your socials, favorite apps, and music in a clean midnight-glass interface.
+      <p data-aos="fade-up" data-aos-delay="100" class="text-gray-400 text-lg md:text-xl max-w-xl mx-auto mb-10">
+          Share a ghost-link to chat privately. The link deactivates the moment they click. No WhatsApp clutter.
       </p>
       
+      <!-- GHOST LINK GENERATOR -->
       <div data-aos="zoom-in" data-aos-delay="200" class="glass-card p-2 max-w-md mx-auto flex items-center rounded-2xl">
-          <div class="pl-4 flex-shrink-0 text-emerald-500/50 font-mono text-sm">zync.bio/</div>
-          <input type="text" id="claim-input" placeholder="username" class="bg-transparent flex-1 py-3 px-2 outline-none text-white font-bold placeholder:text-gray-700 min-w-[50px]">
-          <button onclick="claimHandle()" class="claim-btn bg-emerald-500 text-black px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:brightness-110 active:scale-95 transition">
-              Claim
+          <div class="pl-4 flex-shrink-0 text-emerald-500/50 font-mono text-sm">zync.bio/ghost/</div>
+          <input type="text" id="ghost-input" placeholder="session-name" class="bg-transparent flex-1 py-3 px-2 outline-none text-white font-bold">
+          <button onclick="createGhostLink()" class="bg-emerald-500 text-black px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:brightness-110 transition">
+              Generate
           </button>
       </div>
+      <div id="link-result" class="mt-4 text-[10px] text-emerald-400 font-mono hidden"></div>
   </div>
 </section>
 
+<!-- LIVE STATS POWERED BY ABLY -->
 <div class="max-w-4xl mx-auto px-6 mb-20" data-aos="fade-up">
   <div class="glass-card py-6 px-10 rounded-3xl flex flex-col md:flex-row items-center justify-around gap-8">
       <div class="text-center">
-          <p class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-1">Active Zyncers</p>
-          <h3 class="text-3xl font-black counter" data-target="0">0</h3>
+          <p class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-1">Live Presence</p>
+          <h3 class="text-3xl font-black" id="active-zyncers">0</h3>
       </div>
       <div class="h-10 w-[1px] bg-white/10 hidden md:block"></div>
       <div class="text-center">
-          <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">Links Synced</p>
-          <h3 class="text-3xl font-black counter" data-target="0">0</h3>
-      </div>
-      <div class="h-10 w-[1px] bg-white/10 hidden md:block"></div>
-      <div class="text-center">
-          <p class="text-[10px] font-bold text-purple-400 uppercase tracking-widest mb-1">Profile Views</p>
-          <h3 class="text-3xl font-black counter" data-target="0">0</h3>
+          <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">Global Messages</p>
+          <h3 class="text-3xl font-black" id="total-messages">0</h3>
       </div>
   </div>
 </div>
 
-<a href="ai-chat.html" class="floating-ai-btn group" data-aos="fade-left" data-aos-delay="500">
-    <div class="ai-pulse"></div>
-    <span class="text-[10px] font-black uppercase tracking-widest text-emerald-400 group-hover:text-white transition">Talk to Zync AI</span>
-</a>
-
-<footer class="py-20 text-center text-[10px] font-bold tracking-[1em] opacity-20 uppercase">
-    Zync Protocol © 2026
-</footer>
-
 <script>
   AOS.init({ duration: 800, once: true });
 
-  // Supabase client
-  const SUPABASE_URL = "https://YOUR_SUPABASE_PROJECT_ID.supabase.co";
-  const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
-  const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // 2. ABLY CONFIGURATION
+  const ABLY_KEY = 'YOUR_ABLY_KEY_HERE'; // Get free key at [Ably.com](https://ably.com)
+  const ably = new Ably.Realtime(ABLY_KEY);
+  const globalChannel = ably.channels.get('zync-global-stats');
 
-  // Claim username
-  async function claimHandle() {
-      const username = document.getElementById('claim-input').value.trim();
-      if(username.length < 3){
-          alert("Enter a valid username (min 3 chars)");
-          return;
-      }
+  // Track Connection
+  ably.connection.on('connected', () => {
+      document.getElementById('connection-status').innerText = "Protocol Online";
+      globalChannel.presence.enter();
+  });
 
-      // Check if username exists
-      const { data, error } = await supabase.from('users').select('username').eq('username', username).single();
-      if(data){
-          alert("Username already claimed, try another");
-          return;
-      }
-
-      // Redirect to signup/login with username stored
-      localStorage.setItem('zync_claimed_username', username);
-      window.location.href = 'login.html';
-  }
-
-  // Fetch live counters
-  async function loadCounters() {
-      const { data, error } = await supabase.from('users').select('id', { count: 'exact' });
-      const usersCount = data?.length || 0;
-      const linksCount = await supabase.from('links').select('id', { count: 'exact' });
-      const viewsCount = await supabase.from('users').select('views', { count: 'exact' });
-      document.querySelectorAll('.counter')[0].setAttribute('data-target', usersCount);
-      document.querySelectorAll('.counter')[1].setAttribute('data-target', linksCount.count);
-      document.querySelectorAll('.counter')[2].setAttribute('data-target', viewsCount.count);
-      startCounters();
-  }
-
-  // Animate counters
-  function startCounters() {
-      const counters = document.querySelectorAll('.counter');
-      counters.forEach(counter => {
-          const updateCount = () => {
-              const target = +counter.getAttribute('data-target');
-              const count = +counter.innerText.replace(/[+,]/g,'');
-              const inc = target / 200;
-              if(count < target){
-                  counter.innerText = Math.ceil(count + inc).toLocaleString() + (target > 10000 ? '+' : '');
-                  setTimeout(updateCount, 15);
-              } else {
-                  counter.innerText = target.toLocaleString() + '+';
-              }
-          };
-          updateCount();
+  // 3. LIVE COUNTER LOGIC (Instant Updates)
+  globalChannel.presence.subscribe(() => {
+      globalChannel.presence.get((err, members) => {
+          document.getElementById('active-zyncers').innerText = members.length;
       });
+  });
+
+  // 4. GHOST LINK LOGIC
+  function createGhostLink() {
+      const name = document.getElementById('ghost-input').value.trim() || 'anon';
+      const secretId = Math.random().toString(36).substr(2, 9);
+      const ghostUrl = window.location.origin + '/chat.html?session=' + secretId;
+      
+      // Store locally that we are the creator (so we don't get locked out)
+      localStorage.setItem('zync_creator_' + secretId, 'true');
+      
+      const resultEl = document.getElementById('link-result');
+      resultEl.innerText = "SHARE THIS ONCE: " + ghostUrl;
+      resultEl.classList.remove('hidden');
+      
+      // Professional feedback
+      console.log(`Ghost session ${name} initialized with ID ${secretId}`);
   }
 
-  window.onload = loadCounters;
+  // Handle "Deactivation" logic on entry
+  window.onload = () => {
+      const params = new URLSearchParams(window.location.search);
+      const session = params.get('session');
+      
+      if(session) {
+          // If NOT creator and already joined once -> BURN
+          if(!localStorage.getItem('zync_creator_' + session) && sessionStorage.getItem('zync_used_' + session)) {
+              document.body.innerHTML = "<div class='h-screen flex items-center justify-center font-black text-emerald-500'>LINK DEACTIVATED: ACCESS REVOKED.</div>";
+          } else {
+              sessionStorage.setItem('zync_used_' + session, 'true');
+              // Proceed to professional chat interface...
+          }
+      }
+  };
 </script>
-
 </body>
 </html>
