@@ -1,178 +1,158 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zync | Profile</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-<style>
-    body { 
-        background: radial-gradient(circle at top right, #064e3b, #020617); 
-        min-height: 100vh; 
-        color: #ecfdf5; 
-        font-family: 'Inter', sans-serif;
-        scroll-behavior: smooth;
-    }
-    .glass-card { 
-        background: rgba(255, 255, 255, 0.03); 
-        backdrop-filter: blur(20px); 
-        border: 1px solid rgba(16, 185, 129, 0.15); 
-        transition: all 0.3s ease;
-    }
-    .glass-card:hover {
-        border-color: rgba(16, 185, 129, 0.5);
-        transform: translateY(-3px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-    }
-    .neon-border {
-        box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
-    }
-    .multi-gradient {
-        background: linear-gradient(to right, #34d399, #60a5fa, #a78bfa);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    .link-hover:hover {
-        background: rgba(16, 185, 129, 0.1);
-        transform: scale(1.02);
-        transition: all 0.2s ease;
-    }
-</style>
+    <meta charset="UTF-8">
+    <title>XENONLINK | Ghost Protocol Workspace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- ABLY CORE & CHAT SDKs -->
+    <script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
+    <script src="https://cdn.ably.com/lib/ably-chat.umd.cjs-0.js"></script>
+    <style>
+        body { background: #020617; color: #f8fafc; font-family: 'Inter', sans-serif; overflow: hidden; }
+        .hero-gradient { background: linear-gradient(135deg, #34d399 0%, #3b82f6 50%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .glass-panel { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(20px); border: 1px solid rgba(16, 185, 129, 0.1); }
+        #msg-stream::-webkit-scrollbar { width: 4px; }
+        #msg-stream::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
+        .msg-own { background: #10b981; color: #000; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .msg-guest { background: rgba(255,255,255,0.05); align-self: flex-start; border-bottom-left-radius: 2px; border: 1px solid rgba(255,255,255,0.1); }
+    </style>
 </head>
-<body class="p-4 md:p-10">
+<body class="flex items-center justify-center h-screen p-6">
 
-<!-- Loader -->
-<div id="loader" class="fixed inset-0 flex items-center justify-center bg-[#020617] z-50">
-    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-emerald-500"></div>
-</div>
-
-<!-- View Count -->
-<div class="flex items-center justify-center gap-3 mt-4" data-aos="fade-in">
-    <div class="flex -space-x-2">
-        <img class="w-6 h-6 rounded-full border border-[#020617]" src="https://api.dicebear.com/7.x/avataaars/svg?seed=1">
-        <img class="w-6 h-6 rounded-full border border-[#020617]" src="https://api.dicebear.com/7.x/avataaars/svg?seed=2">
-        <img class="w-6 h-6 rounded-full border border-[#020617]" src="https://api.dicebear.com/7.x/avataaars/svg?seed=3">
-    </div>
-    <p class="text-[10px] font-bold text-emerald-400/80 uppercase tracking-tighter">
-        Join <span id="view-count-num">...</span> others who visited this Zync
-    </p>
-</div>
-
-<!-- Profile Section -->
-<div class="max-w-xl mx-auto space-y-8 pb-20">
-    <header class="flex flex-col items-center text-center pt-8">
-        <div class="relative mb-6">
-            <div class="absolute inset-0 bg-emerald-500 blur-3xl opacity-20 rounded-full"></div>
-            <img id="profile-pic" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Zync" 
-                 class="relative w-32 h-32 rounded-full border-4 border-emerald-500/30 p-1 neon-border object-cover">
+    <!-- SETUP SCREEN -->
+    <div id="setup-ui" class="glass-panel max-w-lg w-full p-12 rounded-[3rem] text-center shadow-2xl">
+        <h1 class="text-5xl font-black hero-gradient mb-4 tracking-tighter">ZYNC</h1>
+        <p class="text-slate-400 text-sm mb-10 italic">"Frequency Synced. No Footprint Left Behind."</p>
+        <div class="space-y-4">
+            <input id="user-display-name" type="text" placeholder="Your Professional Alias" class="w-full bg-black/40 border border-white/10 p-5 rounded-2xl outline-none focus:border-emerald-500">
+            <button onclick="createGhostSession()" class="w-full bg-emerald-500 text-black font-black p-5 rounded-2xl hover:brightness-110 transition uppercase tracking-widest text-xs">Initialize Ghost Link</button>
         </div>
-        <h1 id="name" class="text-4xl font-black multi-gradient tracking-tight">Loading...</h1>
-        <p id="handle" class="text-emerald-400 font-mono text-sm mt-1">@username</p>
-        <p id="bio-text" class="text-gray-400 mt-4 px-6 leading-relaxed italic"></p>
-    </header>
+        <div id="link-box" class="hidden mt-8 p-6 border border-dashed border-emerald-500/30 rounded-2xl bg-black/20">
+            <code id="ghost-url" class="text-[10px] text-slate-300 break-all font-mono"></code>
+            <button onclick="copyAndJoin()" class="block w-full mt-4 text-[10px] font-bold text-emerald-400 underline">Copy & Enter Frequency</button>
+        </div>
+    </div>
 
-    <!-- Links -->
-    <section id="links-area" class="space-y-3"></section>
-
-    <!-- Recommendations -->
-    <section class="space-y-6 pt-6">
-        <h2 class="text-xs font-black text-center uppercase tracking-[0.3em] text-gray-500">My Favorites</h2>
-        <div id="recs-grid" class="grid grid-cols-1 gap-4"></div>
-    </section>
-
-    <footer class="text-center pt-12">
-        <a href="index.html" class="text-[10px] font-bold tracking-widest text-emerald-500/50 hover:text-emerald-500 transition uppercase">
-            Created with Zync
-        </a>
-    </footer>
-</div>
-
-<script>
-const SUPABASE_URL = "https://dkqafrwchifzpftxhqwp.supabase.co";
-const SUPABASE_KEY = "sb_publishable_lSLvTgFSNcTWxnZhpW2YQA_p1rEtRXw";
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-const iconMap = { instagram:'📸', tiktok:'🎵', whatsapp:'💬', telegram:'✈️', spotify:'🎧', x:'🐦', youtube:'📺' };
-const catIcons = { music:'🎧', app:'🚀', movie:'🎬', snack:'🍬' };
-
-async function loadProfile() {
-    const params = new URLSearchParams(window.location.search);
-    const username = params.get('u');
-
-    if (!username) {
-        document.body.innerHTML = "<div class='text-center mt-20 text-red-400'>No username provided!</div>";
-        return;
-    }
-
-    // Fetch User Data
-    const { data: user, error: uErr } = await supabaseClient
-        .from('users')
-        .select('*')
-        .eq('username', username)
-        .single();
-
-    if (uErr || !user) {
-        document.getElementById('name').innerText = "User Not Found";
-        document.getElementById('loader').classList.add('hidden');
-        return;
-    }
-
-    // Header Info
-    document.getElementById('name').innerText = user.display_name || user.username;
-    document.getElementById('handle').innerText = `@${user.username}`;
-    document.getElementById('bio-text').innerText = user.bio || "No bio yet.";
-    if(user.avatar_url) document.getElementById('profile-pic').src = user.avatar_url;
-    document.title = `${user.display_name || user.username} | Zync`;
-
-    // Increment Views
-    await supabaseClient.rpc('increment_views', { user_id_input: user.id });
-    const { data: updated } = await supabaseClient
-        .from('users')
-        .select('views')
-        .eq('id', user.id)
-        .single();
-    document.getElementById('view-count-num').innerText = updated.views.toLocaleString();
-
-    // Social Links
-    const { data: links } = await supabaseClient.from('links').select('*').eq('user_id', user.id);
-    const linksContainer = document.getElementById('links-area');
-    linksContainer.innerHTML = links.map(l => `
-        <a href="${l.url}" target="_blank" class="glass-card flex items-center p-4 rounded-2xl link-hover">
-            <span class="text-2xl mr-4">${iconMap[l.platform.toLowerCase()] || '🔗'}</span>
-            <span class="font-bold text-sm tracking-wide">${l.platform}</span>
-            <span class="ml-auto text-emerald-500 opacity-50">→</span>
-        </a>
-    `).join('');
-
-    // Recommendations
-    const { data: recs } = await supabaseClient.from('recommendations').select('*').eq('user_id', user.id);
-    const recsContainer = document.getElementById('recs-grid');
-    recsContainer.innerHTML = recs.map(r => `
-        <div class="glass-card p-5 rounded-3xl border-l-4 border-emerald-500/50">
-            <div class="flex justify-between items-start">
-                <div class="flex gap-3">
-                    <span class="text-2xl opacity-80">${catIcons[r.category] || '⭐'}</span>
-                    <div>
-                        <p class="text-[10px] uppercase font-bold text-gray-500 tracking-wider">${r.category}</p>
-                        <h4 class="text-lg font-bold text-emerald-50">${r.name}</h4>
-                    </div>
-                </div>
-                <div class="text-emerald-400 font-bold bg-emerald-500/10 px-3 py-1 rounded-full text-xs">
-                    ${'⭐'.repeat(r.rating)}
+    <!-- WORKSPACE SCREEN -->
+    <div id="workspace-ui" class="hidden glass-panel w-full max-w-6xl h-[90vh] rounded-[3rem] flex flex-col overflow-hidden shadow-2xl">
+        <header class="p-8 border-b border-white/5 flex justify-between items-center bg-white/2">
+            <div>
+                <h2 class="font-black hero-gradient text-2xl tracking-tighter">GHOST PROTOCOL</h2>
+                <div class="flex items-center gap-2 mt-1">
+                    <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                    <p id="presence-stat" class="text-[10px] text-emerald-400 font-bold uppercase tracking-[0.2em]">Presence: 1 Syncing</p>
                 </div>
             </div>
-        </div>
-    `).join('');
+            <button onclick="location.href=window.location.pathname" class="text-[10px] font-black bg-red-500/10 text-red-400 px-6 py-3 rounded-xl border border-red-500/20 hover:bg-red-500 hover:text-white transition uppercase">Terminate Session</button>
+        </header>
 
-    // Hide Loader
-    document.getElementById('loader').classList.add('hidden');
-}
+        <div id="msg-stream" class="flex-1 overflow-y-auto p-10 space-y-6 flex flex-col"></div>
+        <div id="typing-alert" class="px-10 h-6 text-[10px] font-bold text-emerald-500 italic uppercase"></div>
 
-loadProfile();
-AOS.init({ duration: 800, once: true });
-</script>
+        <footer class="p-8 bg-white/2 border-t border-white/5 flex gap-4">
+            <input id="chat-input" type="text" placeholder="Transmit your frequency..." class="flex-1 bg-black/40 border border-white/10 p-5 rounded-2xl outline-none focus:border-emerald-500 text-white" oninput="sendTyping()">
+            <button onclick="transmit()" class="bg-emerald-500 text-black font-black px-10 rounded-2xl hover:brightness-110 uppercase tracking-widest text-xs">Transmit</button>
+        </footer>
+    </div>
+
+    <script>
+        const ABLY_KEY = 'YOUR_ABLY_API_KEY'; // Get your key at https://ably.com
+        let realtime, chatClient, room, myId, myName;
+
+        // 1. GHOST LINK GENERATION
+        function createGhostSession() {
+            myName = document.getElementById('user-display-name').value.trim() || 'Architect';
+            const sessionId = 'ZN-' + Math.random().toString(36).substr(2, 9);
+            const url = window.location.origin + window.location.pathname + '?session=' + sessionId;
+            document.getElementById('ghost-url').innerText = url;
+            document.getElementById('link-box').classList.remove('hidden');
+            localStorage.setItem(`zync_admin_${sessionId}`, 'true');
+        }
+
+        function copyAndJoin() {
+            navigator.clipboard.writeText(document.getElementById('ghost-url').innerText);
+            window.location.href = document.getElementById('ghost-url').innerText;
+        }
+
+        // 2. INITIALIZE GHOST WORKSPACE
+        async function initGhostProtocol() {
+            const params = new URLSearchParams(window.location.search);
+            const sessionId = params.get('session');
+            if(!sessionId) return;
+
+            // One-Time Deactivation Logic
+            const isAdmin = localStorage.getItem(`zync_admin_${sessionId}`);
+            if (!isAdmin && sessionStorage.getItem(`zync_burned_${sessionId}`)) {
+                document.body.innerHTML = "<div class='text-center'><h1 class='text-emerald-500 font-black text-6xl'>403</h1><p class='text-slate-500 font-bold uppercase tracking-widest'>Link Deactivated</p></div>";
+                return;
+            }
+            if (!isAdmin) sessionStorage.setItem(`zync_burned_${sessionId}`, 'true');
+
+            document.getElementById('setup-ui').style.display = 'none';
+            document.getElementById('workspace-ui').classList.remove('hidden');
+
+            myId = 'XL-' + Math.random().toString(36).substr(2, 5);
+            realtime = new Ably.Realtime({ key: ABLY_KEY, clientId: myId }); //
+            chatClient = new AblyChat.ChatClient(realtime);
+            room = await chatClient.rooms.get(sessionId);
+
+            await room.attach(); //
+
+            // PRESENCE: Live Occupancy
+            room.presence.subscribe(() => {
+                room.presence.get().then(m => document.getElementById('presence-stat').innerText = `Presence: ${m.length} Syncing`);
+            });
+            room.presence.enter({ name: myName });
+
+            // MESSAGES & HISTORY: Pulling Context
+            room.messages.subscribe((event) => {
+                if (event.type === 'message') render(event.message, event.message.clientId === myId ? 'own' : 'guest');
+                else if (event.type === 'message.deleted') document.getElementById(event.message.serial)?.remove();
+                else if (event.type === 'message.updated') {
+                    const el = document.getElementById(event.message.serial);
+                    if (el) el.querySelector('.text-body').innerText = event.message.text + " (edited)";
+                }
+            });
+
+            // TYPING INDICATORS
+            room.typing.subscribe(e => {
+                document.getElementById('typing-alert').innerText = e.currentlyTyping.size > 0 ? "Transmission in progress..." : "";
+            });
+        }
+
+        // 3. ACTIONS
+        async function transmit() {
+            const input = document.getElementById('chat-input');
+            if(!input.value) return;
+            await room.messages.send({ text: input.value });
+            input.value = '';
+        }
+
+        function render(msg, type) {
+            const stream = document.getElementById('msg-stream');
+            const div = document.createElement('div');
+            div.id = msg.serial;
+            div.className = `max-w-[70%] p-6 rounded-[2.5rem] shadow-xl ${type === 'own' ? 'msg-own' : 'msg-guest'}`;
+            div.innerHTML = `
+                <p class="text-body font-medium">${msg.text}</p>
+                <div class="mt-4 flex gap-4 opacity-40 text-[9px] font-black uppercase tracking-widest">
+                    <button onclick="editMsg('${msg.serial}')" class="hover:text-white transition">Edit</button>
+                    <button onclick="room.messages.delete('${msg.serial}')" class="hover:text-red-400 transition">Delete</button>
+                </div>
+            `;
+            stream.appendChild(div);
+            stream.scrollTop = stream.scrollHeight;
+        }
+
+        async function editMsg(serial) {
+            const newText = prompt("Edit transmission:");
+            if (newText) await room.messages.update(serial, { text: newText }); //
+        }
+
+        function sendTyping() { room.typing.keystroke(); } //
+
+        if(window.location.search.includes('session=')) initGhostProtocol();
+    </script>
 </body>
 </html>
+
