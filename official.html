@@ -3,204 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zync | Official Vision</title>
+    <title>Zync | Ghost Protocol Workspace</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <!-- ABLY SDKs -->
+    <script src="https://cdn.ably.com"></script>
+    <script src="https://cdn.ably.com"></script>
     <style>
         body {
             background: #020617;
             background-image: radial-gradient(circle at top right, #064e3b, transparent 40%),
                               radial-gradient(at bottom left, #1e1b4b, transparent 40%);
-            color: #f8fafc;
-            font-family: 'Inter', sans-serif;
-            overflow-x: hidden;
+            color: #f8fafc; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden;
         }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.02);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(16, 185, 129, 0.1);
-            transition: all 0.4s ease;
-        }
-
-        .glass-card:hover {
-            border-color: rgba(16, 185, 129, 0.5);
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .hero-gradient {
-            background: linear-gradient(135deg, #34d399 0%, #3b82f6 50%, #a78bfa 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .owner-badge {
-            background: linear-gradient(to right, rgba(16, 185, 129, 0.2), transparent);
-            border-left: 4px solid #10b981;
-        }
-
-        .manifesto-line {
-            height: 1px;
-            background: linear-gradient(to right, transparent, rgba(16, 185, 129, 0.5), transparent);
-        }
-
-        /* Floating AI button */
-        .floating-ai-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 20px;
-            border-radius: 9999px;
-            background: rgba(16, 185, 129, 0.1);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .floating-ai-btn:hover {
-            transform: scale(1.05) translateY(-5px);
-            background: rgba(16, 185, 129, 0.2);
-            border-color: rgba(16, 185, 129, 0.6);
-            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
-        }
-
-        .ai-pulse {
-            width: 12px;
-            height: 12px;
-            background: #34d399;
-            border-radius: 50%;
-            position: relative;
-        }
-        .ai-pulse::after {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: #34d399;
-            border-radius: 50%;
-            animation: pulse-ring 2s infinite;
-        }
-        @keyframes pulse-ring {
-            0% { transform: scale(0.5); opacity: 0.8; }
-            100% { transform: scale(2.5); opacity: 0; }
-        }
+        .glass-card { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(20px); border: 1px solid rgba(16, 185, 129, 0.1); }
+        .hero-gradient { background: linear-gradient(135deg, #34d399 0%, #3b82f6 50%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        #msg-stream::-webkit-scrollbar { width: 4px; }
+        #msg-stream::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
     </style>
 </head>
-<body>
+<body class="flex items-center justify-center p-6">
 
-    <!-- Floating AI Button -->
-    <a href="ai-chat.html" class="floating-ai-btn group">
-        <div class="ai-pulse"></div>
-        <span class="text-[10px] font-black uppercase tracking-widest text-emerald-400 group-hover:text-white transition">Talk to Zync AI</span>
-    </a>
+    <!-- SCREEN 1: THE GENERATOR (For Flexi/Admin) -->
+    <div id="setup-ui" class="glass-card max-w-lg w-full p-10 rounded-[3rem] text-center shadow-2xl transition-all duration-700">
+        <h1 class="text-4xl font-black hero-gradient mb-2 tracking-tighter">ZYNC GHOST</h1>
+        <p class="text-slate-400 text-sm mb-8">Professional Private Outlines. Share once. Burn forever.</p>
+        
+        <div class="space-y-4">
+            <input id="admin-name" type="text" placeholder="Enter Your Professional Name" 
+                   class="w-full bg-emerald-900/10 border border-emerald-500/20 p-5 rounded-2xl outline-none focus:border-emerald-400 text-white">
+            <button onclick="createGhostSession()" 
+                    class="w-full bg-emerald-500 text-black font-black p-5 rounded-2xl hover:brightness-110 transition transform active:scale-95 uppercase tracking-widest text-xs">
+                Initialize Ghost Link
+            </button>
+        </div>
 
-    <!-- Navigation -->
-    <nav class="fixed w-full z-50 p-6 flex justify-between items-center backdrop-blur-md bg-black/30 border-b border-white/5">
-        <div class="text-2xl font-black tracking-tighter hero-gradient">ZYNC OFFICIAL</div>
-        <a href="index.html" class="text-[10px] font-bold uppercase tracking-widest border border-white/10 px-4 py-2 rounded-lg hover:bg-white hover:text-black transition">Return to Hub</a>
-    </nav>
+        <div id="link-display" class="hidden mt-8 p-6 bg-black/40 border border-dashed border-emerald-500/30 rounded-2xl animate-pulse">
+            <p class="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-400 mb-3">Single-Use URL Generated</p>
+            <code id="ghost-url" class="text-[10px] break-all text-slate-300 font-mono"></code>
+            <button onclick="copyAndJoin()" class="block w-full mt-4 text-[10px] font-bold text-white underline decoration-emerald-500 hover:text-emerald-400">Copy & Join Channel</button>
+        </div>
+    </div>
 
-    <!-- Hero Section -->
-    <section class="pt-40 pb-20 px-6 max-w-5xl mx-auto text-center">
-        <h1 data-aos="fade-up" class="text-5xl md:text-8xl font-black mb-8 leading-none">
-            ALWAYS IN <br> <span class="hero-gradient">ZYNC.</span>
-        </h1>
-        <div class="manifesto-line w-full mb-12" data-aos="zoom-in"></div>
-        <p data-aos="fade-up" data-aos-delay="100" class="text-xl text-slate-400 font-medium max-w-2xl mx-auto leading-relaxed italic">
-            "Your digital presence is scattered. Your music is here, your social life is there, your vibe is everywhere. Zync is the force that pulls them into one orbit."
-        </p>
-    </section>
-
-    <!-- Owner Section -->
-    <section class="py-20 px-6 max-w-6xl mx-auto">
-        <div class="glass-card rounded-[3rem] overflow-hidden grid grid-cols-1 md:grid-cols-2">
-            <div class="p-12 flex flex-col justify-center" data-aos="fade-right">
-                <div class="owner-badge px-4 py-2 mb-6 inline-block">
-                    <span class="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-400">Owner & Architect</span>
-                </div>
-                <h2 class="text-4xl font-black mb-6">Built by <span class="text-emerald-500">Flexi</span></h2>
-                <p class="text-slate-400 leading-relaxed mb-6 text-lg">
-                    Recognized as the topmost authority in the Zync ecosystem. Flexi envisioned a world where profiles aren't just lists, but extensions of a person's frequency.
-                </p>
-                <div class="flex gap-4">
-                    <div class="text-center bg-white/5 p-4 rounded-2xl flex-1">
-                        <p class="text-2xl font-bold text-white">100%</p>
-                        <p class="text-[10px] uppercase font-bold text-emerald-500">Original</p>
-                    </div>
-                    <div class="text-center bg-white/5 p-4 rounded-2xl flex-1">
-                        <p class="text-2xl font-bold text-white">01</p>
-                        <p class="text-[10px] uppercase font-bold text-blue-500">Vision</p>
-                    </div>
+    <!-- SCREEN 2: THE LIVELY CHAT WORKSPACE -->
+    <div id="workspace-ui" class="hidden glass-card w-full max-w-6xl h-[90vh] rounded-[3rem] flex flex-col overflow-hidden shadow-2xl">
+        <header class="p-8 border-b border-white/5 flex justify-between items-center bg-white/5">
+            <div>
+                <h2 class="font-black hero-gradient text-2xl tracking-tighter">ZYNC WORKSPACE</h2>
+                <div class="flex items-center gap-2 mt-1">
+                    <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                    <p id="live-presence" class="text-[10px] text-emerald-400 font-black uppercase tracking-widest">Presence: 1 Online</p>
                 </div>
             </div>
-            <div class="relative min-h-[400px] bg-emerald-900/20" data-aos="fade-left">
-                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Flexi" class="absolute inset-0 w-full h-full object-cover p-12 opacity-80">
-            </div>
+            <button onclick="location.href=window.location.pathname" class="text-[10px] font-black bg-red-500/10 text-red-400 px-6 py-3 rounded-xl border border-red-500/20 hover:bg-red-500 hover:text-white transition">TERMINATE SESSION</button>
+        </header>
+
+        <div id="msg-stream" class="flex-1 overflow-y-auto p-10 space-y-6 flex flex-col">
+            <!-- Messages stream here -->
         </div>
-    </section>
 
-    <!-- Ideology Section with Counters -->
-    <section class="py-24 px-6 max-w-6xl mx-auto">
-        <h2 class="text-center text-[10px] font-black tracking-[0.5em] text-emerald-500 uppercase mb-12">The Zync Ideology</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div class="glass-card p-10 rounded-3xl hover:border-emerald-500/50 transition duration-500 transform hover:-translate-y-2" data-aos="fade-up">
-                <h3 class="text-2xl font-bold mb-4">Digital Frequency</h3>
-                <p class="text-slate-500 text-sm leading-relaxed mb-4">
-                    We believe your profile should pulse. From the music you play to the apps you rate, Zync is designed to capture your frequency in real-time.
-                </p>
-                <p class="text-emerald-400 font-black text-3xl counter" data-target="12400">0</p>
-                <p class="text-[10px] uppercase tracking-widest text-slate-400">Active Zyncers</p>
-            </div>
-            <div class="glass-card p-10 rounded-3xl hover:border-blue-500/50 transition duration-500 transform hover:-translate-y-2" data-aos="fade-up" data-aos-delay="100">
-                <h3 class="text-2xl font-bold mb-4">Morphic Design</h3>
-                <p class="text-slate-500 text-sm leading-relaxed mb-4">
-                    Why look like everyone else? Our glass-morphic interface adapts to your vibe, ensuring you remain the center of attention.
-                </p>
-                <p class="text-blue-400 font-black text-3xl counter" data-target="85000">0</p>
-                <p class="text-[10px] uppercase tracking-widest text-slate-400">Links Rated</p>
-            </div>
-        </div>
-    </section>
+        <div id="typing-indicator" class="px-10 h-6 text-[10px] font-bold text-emerald-400 italic"></div>
 
-    <!-- Closing Section -->
-    <section class="py-32 text-center" data-aos="zoom-in">
-        <div class="max-w-xl mx-auto">
-            <h4 class="text-5xl font-black hero-gradient mb-4">Always in Zync.</h4>
-            <p class="text-slate-600 font-mono text-xs uppercase tracking-widest">— Signed by Flexi, The Originator</p>
-        </div>
-    </section>
+        <footer class="p-8 bg-white/5 border-t border-white/5 flex gap-4">
+            <input id="chat-input" type="text" placeholder="Transmit to the frequency..." 
+                   class="flex-1 bg-emerald-900/10 border border-white/10 p-5 rounded-2xl outline-none focus:border-emerald-400 text-white" 
+                   oninput="handleTyping()">
+            <button onclick="transmitMessage()" class="bg-emerald-500 text-black font-black px-10 rounded-2xl hover:brightness-110 transition active:scale-95 uppercase tracking-widest text-xs">Transmit</button>
+        </footer>
+    </div>
 
-    <!-- Footer -->
-    <footer class="py-12 border-t border-white/5 text-center">
-        <p class="text-[10px] font-bold text-slate-700 tracking-[1em] uppercase">Authorized by Zync Protocol v1.0</p>
-    </footer>
-
-    <!-- Scripts -->
     <script>
-        AOS.init({ duration: 1000, once: true });
+        // 1. CONFIGURATION
+        const ABLY_KEY = '9zundg.NEZh_w:mwZaZiYQgTY72hVVCu1ia-D58vqNNpirS2S1p3R11UE'; // Sign up free at [Ably.com](https://ably.com)
+        let realtime, chatClient, room, myId, myName;
 
-        // Animated Counters
-        const counters = document.querySelectorAll('.counter');
-        counters.forEach(counter => {
-            const updateCount = () => {
-                const target = +counter.getAttribute('data-target');
-                const count = +counter.innerText.replace(/[+,]/g, '');
-                const inc = Math.ceil(target / 200);
-                if(count < target){
-                    counter.innerText = (count + inc).toLocaleString() + '+';
-                    setTimeout(updateCount, 20);
-                } else {
-                    counter.innerText = target.toLocaleString() + '+';
-                }
+        // 2. CREATE THE DEACTIVATED LINK
+        function createGhostSession() {
+            myName = document.getElementById('admin-name').value.trim() || 'Flexi-Architect';
+            const sessionId = 'ZN-' + Math.random().toString(36).substr(2, 9);
+            const protocolURL = window.location.origin + window.location.pathname + '?session=' + sessionId;
+            
+            document.getElementById('ghost-url').innerText = protocolURL;
+            document.getElementById('link-display').classList.remove('hidden');
+            // Save admin status locally so you can refresh without burning your own link
+            localStorage.setItem(`zync_admin_${sessionId}`, 'true');
+        }
+
+        function copyAndJoin() {
+            navigator.clipboard.writeText(document.getElementById('ghost-url').innerText);
+            window.location.href = document.getElementById('ghost-url').innerText;
+        }
+
+        // 3. START GHOST PROTOCOL (The Lively Interface)
+        async function initGhostProtocol() {
+            const params = new URLSearchParams(window.location.search);
+            const sessionId = params.get('session');
+            if(!sessionId) return;
+
+            // CHECK DEACTIVATION LOGIC: One-Time Burn
+            const isAdmin = localStorage.getItem(`zync_admin_${sessionId}`);
+            const isUsed = sessionStorage.getItem(`zync_burned_${sessionId}`);
+            
+            if (!isAdmin && isUsed) {
+                document.body.innerHTML = `
+                    <div class="text-center">
+                        <h1 class="text-emerald-500 font-black text-6xl mb-4">403</h1>
+                        <p class="text-slate-500 uppercase tracking-widest font-bold">Session Deactivated: Access Revoked</p>
+                    </div>`;
+                return;
             }
-            updateCount();
-        });
+            // Guest "Burns" the link upon first entry
+            if (!isAdmin) sessionStorage.setItem(`zync_burned_${sessionId}`, 'true');
+
+            // Switch UI
+            document.getElementById('setup-ui').style.display = 'none';
+            document.getElementById('workspace-ui').classList.remove('hidden');
+
+            // Initialize Ably Chat SDK
+            myId = 'XL-' + Math.random().toString(36).substr(2, 5);
+            realtime = new Ably.Realtime({ key: ABLY_KEY, clientId: myId });
+            chatClient = new AblyChat.ChatClient(realtime);
+            room = await chatClient.rooms.get(sessionId);
+
+            await room.attach();
+
+            // Presence (Who is online?)
+            room.presence.subscribe(() => {
+                room.presence.get().then(m => {
+                    document.getElementById('live-presence').innerText = `Presence: ${m.length} Online`;
+                });
+            });
+            room.presence.enter({ name: myName || 'Zync Guest' });
+
+            // Messages & History
+            room.messages.subscribe((e) => {
+                render(e.message, e.message.clientId === myId ? 'own' : 'guest');
+            });
+
+            // Typing Metadata
+            room.typing.subscribe(e => {
+                const indicator = document.getElementById('typing-indicator');
+                indicator.innerText = e.currentlyTyping.size > 0 ? "Transmission in progress..." : "";
+            });
+        }
+
+        // 4. TRANSMIT & MANIPULATE MESSAGES
+        async function transmitMessage() {
+            const input = document.getElementById('chat-input');
+            if(!input.value) return;
+            await room.messages.send({ text: input.value });
+            input.value = '';
+        }
+
+        function render(msg, type) {
+            const stream = document.getElementById('msg-stream');
+            const div = document.createElement('div');
+            div.id = msg.id;
+            div.className = `max-w-[75%] p-6 rounded-[2rem] text-sm leading-relaxed shadow-lg ${type === 'own' ? 'bg-emerald-500 text-black self-end rounded-br-none' : 'bg-white/5 text-slate-200 self-start rounded-bl-none border border-white/10'}`;
+            
+            div.innerHTML = `
+                <p class="font-medium">${msg.text}</p>
+                <div class="mt-4 flex gap-4 opacity-40 text-[9px] font-black uppercase tracking-widest">
+                    <button class="hover:text-white transition" onclick="room.messages.update('${msg.id}', {text: 'TRANSMISSION EDITED'})">Edit</button>
+                    <button class="hover:text-red-500 transition" onclick="room.messages.delete('${msg.id}')">Delete</button>
+                </div>
+            `;
+            stream.appendChild(div);
+            stream.scrollTop = stream.scrollHeight;
+        }
+
+        function handleTyping() { room.typing.keystroke(); }
+
+        // Start protocol if URL contains session
+        if(window.location.search.includes('session=')) initGhostProtocol();
     </script>
 </body>
 </html>
