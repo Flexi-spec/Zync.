@@ -1,133 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zync | Join the Vibe</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-  body { 
-      background: radial-gradient(circle at top left, #064e3b, #020617); 
-      min-height: 100vh; 
-      color: #ecfdf5; 
-      font-family: 'Inter', sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 1.5rem;
-  }
-  .glass-box { 
-      background: rgba(255,255,255,0.03); 
-      backdrop-filter: blur(15px); 
-      border: 1px solid rgba(16,185,129,0.2); 
-      width: 100%;
-      max-width: 400px;
-      padding: 2.5rem;
-      border-radius: 2rem;
-      box-shadow: 0 0 40px rgba(0,0,0,0.5);
-  }
-  input { transition: all 0.2s; }
-  input:focus { border-color: #10b981; }
-  button { transition: all 0.2s; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XenonLink | Ghost Protocol</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- ABLY SDKs -->
+    <script src="https://cdn.ably.com"></script>
+    <script src="https://cdn.ably.com"></script>
+    <style>
+        body { background: radial-gradient(circle at top left, #064e3b, #020617); min-height: 100vh; color: #ecfdf5; font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(15px); border: 1px solid rgba(16,185,129,0.2); }
+        .cyan-glow { color: #00f2ff; text-shadow: 0 0 10px rgba(0, 242, 255, 0.5); }
+        #msg-stream::-webkit-scrollbar { width: 4px; }
+        #msg-stream::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
+    </style>
 </head>
-<body>
+<body class="flex items-center justify-center p-4">
 
-<div class="glass-box">
-    <div class="text-center mb-8">
-        <h1 class="text-3xl font-black text-emerald-400 tracking-tighter">ZYNC</h1>
-        <p class="text-gray-400 mt-2">Create your aesthetic profile in seconds.</p>
+    <!-- SCREEN 1: THE WELCOME / LINK GENERATOR -->
+    <div id="setup-ui" class="glass max-w-md w-full p-8 rounded-[2rem] text-center shadow-2xl">
+        <h1 class="text-4xl font-black cyan-glow mb-2">XENONLINK</h1>
+        <p class="text-gray-400 text-sm mb-8">Professional Ghost Outlines. No WhatsApp. No footprint.</p>
+        
+        <div class="space-y-4">
+            <input id="my-name" type="text" placeholder="Your Professional Name" class="w-full bg-black/40 border border-emerald-500/30 p-4 rounded-xl outline-none focus:border-cyan-400">
+            <button onclick="generateGhostLink()" class="w-full bg-emerald-500 text-black font-bold p-4 rounded-xl hover:bg-cyan-400 transition transform active:scale-95">
+                Generate Ghost Link
+            </button>
+        </div>
+
+        <div id="link-box" class="hidden mt-6 p-4 bg-black/60 border border-dashed border-cyan-500/50 rounded-xl">
+            <p class="text-[10px] uppercase tracking-widest text-cyan-400 mb-2">One-Time Link Created</p>
+            <code id="display-link" class="text-xs break-all text-gray-300"></code>
+            <button onclick="copyAndEnter()" class="mt-4 text-[10px] font-bold text-white underline decoration-cyan-500">Copy & Enter Session</button>
+        </div>
     </div>
 
-    <div class="space-y-4">
-        <input id="signup-username" type="text" placeholder="Username"
-               class="w-full bg-emerald-900/20 border border-emerald-500/30 p-4 rounded-2xl outline-none">
+    <!-- SCREEN 2: THE PROFESSIONAL CHAT WORKSPACE -->
+    <div id="chat-ui" class="hidden glass w-full max-w-5xl h-[85vh] rounded-[2rem] flex flex-col overflow-hidden shadow-2xl">
+        <header class="p-6 border-bottom border-white/10 flex justify-between items-center bg-white/5">
+            <div>
+                <h2 class="font-black cyan-glow text-xl">SESSION: ACTIVE</h2>
+                <p id="presence-count" class="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Presence: 0 Online</p>
+            </div>
+            <button onclick="burnSession()" class="text-[10px] font-bold bg-red-500/20 text-red-400 px-4 py-2 rounded-lg border border-red-500/30 hover:bg-red-500 hover:text-white transition">BURN SESSION</button>
+        </header>
 
-        <input id="email" type="email" placeholder="Email Address"
-               class="w-full bg-emerald-900/20 border border-emerald-500/30 p-4 rounded-2xl outline-none">
+        <div id="msg-stream" class="flex-1 overflow-y-auto p-6 space-y-4 flex flex-col">
+            <!-- Messages load here -->
+        </div>
 
-        <input id="password" type="password" placeholder="Password"
-               class="w-full bg-emerald-900/20 border border-emerald-500/30 p-4 rounded-2xl outline-none">
+        <div id="typing-box" class="px-6 text-[10px] text-cyan-400 italic h-4"></div>
 
-        <button onclick="handleAuth('signIn')" class="w-full bg-emerald-500 text-black font-bold p-4 rounded-2xl hover:bg-emerald-400">
-            Sign In
-        </button>
-
-        <button onclick="handleAuth('signUp')" class="w-full text-emerald-400 text-sm font-medium border border-emerald-500/20 p-4 rounded-2xl hover:bg-emerald-500/10">
-            Create New Account
-        </button>
+        <footer class="p-6 bg-white/5 flex gap-4">
+            <input id="chat-input" type="text" placeholder="Type a professional transmission..." class="flex-1 bg-black/40 border border-white/10 p-4 rounded-xl outline-none focus:border-cyan-400" oninput="sendTyping()">
+            <button onclick="transmit()" class="bg-cyan-500 text-black font-black px-8 rounded-xl hover:brightness-110">SEND</button>
+        </footer>
     </div>
 
-    <p id="msg" class="text-center mt-6 text-xs text-emerald-300 hidden"></p>
-</div>
+    <script>
+        const ABLY_KEY = '9zundg.NEZh_w:mwZaZiYQgTY72hVVCu1ia-D58vqNNpirS2S1p3R11UE'; 
+        let realtime, chatClient, room, myId, myName;
 
-<script>
-    // Supabase
-    const SUPABASE_URL = "https://dkqafrwchifzpftxhqwp.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_lSLvTgFSNcTWxnZhpW2YQA_p1rEtRXw";
-    const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    async function handleAuth(type) {
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value.trim();
-        const username = document.getElementById('signup-username').value.trim();
-        const msg = document.getElementById('msg');
-
-        if(type === 'signUp' && username.length < 3){
-            msg.innerText = "Username must be at least 3 characters";
-            msg.className = "text-center mt-6 text-xs text-red-400";
-            msg.classList.remove('hidden');
-            return;
+        // 1. GENERATE GHOST LINK
+        function generateGhostLink() {
+            myName = document.getElementById('my-name').value.trim() || 'Admin';
+            const roomID = 'XN-' + Math.random().toString(36).substr(2, 10);
+            const fullLink = window.location.origin + window.location.pathname + '?ghost=' + roomID;
+            
+            document.getElementById('display-link').innerText = fullLink;
+            document.getElementById('link-box').classList.remove('hidden');
+            localStorage.setItem('is_admin_' + roomID, 'true');
         }
 
-        msg.innerText = "Processing...";
-        msg.className = "text-center mt-6 text-xs text-emerald-300";
-        msg.classList.remove('hidden');
+        function copyAndEnter() {
+            const link = document.getElementById('display-link').innerText;
+            navigator.clipboard.writeText(link);
+            window.location.href = link;
+        }
 
-        let response;
-        if(type === 'signUp'){
-            // Check if username exists
-            const { data: existing, error: checkErr } = await supabase.from('users').select('username').eq('username', username).single();
-            if(existing){
-                msg.innerText = "Username already taken";
-                msg.className = "text-center mt-6 text-xs text-red-400";
+        // 2. INITIALIZE GHOST SESSION
+        async function startGhostSession() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomID = urlParams.get('ghost');
+            if(!roomID) return;
+
+            // One-Time Activation Logic
+            if (!localStorage.getItem('is_admin_' + roomID) && sessionStorage.getItem('used_' + roomID)) {
+                document.body.innerHTML = "<h1 class='text-red-500 font-black text-2xl'>LINK DEACTIVATED. SESSION BURNED.</h1>";
                 return;
             }
+            sessionStorage.setItem('used_' + roomID, 'true');
 
-            // Create new user
-            response = await supabase.auth.signUp({ email, password });
-            if(!response.error){
-                // Insert username into users table
-                await supabase.from('users').insert({ username });
-                msg.innerText = "Account created! Check email for confirmation";
-            }
-        } else {
-            // Sign in
-            response = await supabase.auth.signInWithPassword({ email, password });
-            if(!response.error){
-                msg.innerText = "Redirecting...";
-                setTimeout(()=> window.location.href='dashboard.html', 500);
-            }
+            document.getElementById('setup-ui').classList.add('hidden');
+            document.getElementById('chat-ui').classList.remove('hidden');
+
+            myId = 'USR-' + Math.random().toString(36).substr(2, 5);
+            realtime = new Ably.Realtime({ key: ABLY_KEY, clientId: myId });
+            chatClient = new AblyChat.ChatClient(realtime);
+            room = await chatClient.rooms.get(roomID);
+
+            await room.attach();
+
+            // Presence (Lively Interface)
+            room.presence.subscribe(() => {
+                room.presence.get().then(m => document.getElementById('presence-count').innerText = `Presence: ${m.length} Online`);
+            });
+            room.presence.enter({ name: myName });
+
+            // History & Real-time Messages
+            room.messages.subscribe((e) => {
+                render(e.message.text, e.message.clientId === myId ? 'own' : 'guest', e.message.id);
+            });
+
+            // Typing Indicators
+            room.typing.subscribe(e => {
+                const indicator = document.getElementById('typing-box');
+                indicator.innerText = e.currentlyTyping.size > 0 ? "Someone is typing..." : "";
+            });
         }
 
-        if(response.error){
-            msg.innerText = response.error.message;
-            msg.className = "text-center mt-6 text-xs text-red-400";
+        // 3. MESSAGE LOGIC
+        async function transmit() {
+            const inp = document.getElementById('chat-input');
+            if(!inp.value) return;
+            await room.messages.send({ text: inp.value });
+            inp.value = '';
         }
-    }
 
-    // Prefill claimed username if coming from landing
-    window.onload = () => {
-        const claimedName = localStorage.getItem('zync_claimed_username');
-        const usernameInput = document.getElementById('signup-username');
-        if(claimedName && usernameInput){
-            usernameInput.value = claimedName;
-            localStorage.removeItem('zync_claimed_username');
-            usernameInput.classList.add('border-emerald-500');
-            console.log("Reserved username: " + claimedName);
+        function render(text, type, id) {
+            const stream = document.getElementById('msg-stream');
+            const div = document.createElement('div');
+            div.className = `max-w-[80%] p-4 rounded-2xl text-sm ${type === 'own' ? 'bg-cyan-500 text-black self-end rounded-tr-none' : 'bg-white/10 text-white self-start rounded-tl-none border border-white/5'}`;
+            div.innerHTML = `<p>${text}</p><div class="mt-2 flex gap-2 opacity-50 text-[9px] font-bold">
+                <button onclick="room.messages.update('${id}', {text: 'MESSAGE EDITED'})">EDIT</button>
+                <button onclick="room.messages.delete('${id}')">DELETE</button>
+            </div>`;
+            stream.appendChild(div);
+            stream.scrollTop = stream.scrollHeight;
         }
-    }
-</script>
+
+        function sendTyping() { room.typing.keystroke(); }
+        function burnSession() { location.href = window.location.pathname; }
+
+        if(window.location.search.includes('ghost=')) startGhostSession();
+    </script>
 </body>
 </html>
