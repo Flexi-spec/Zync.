@@ -3,227 +3,152 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zync Dashboard | Control Center</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<title>Zync Dashboard | Ghost Control</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<!-- ABLY REALTIME & CHAT SDKs -->
+<script src="https://cdn.ably.com"></script>
+<script src="https://cdn.ably.com"></script>
 <style>
     body { background: radial-gradient(circle at top left, #064e3b, #020617); min-height: 100vh; color: #ecfdf5; font-family: 'Inter', sans-serif; }
-    .glass-box { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(16, 185, 129, 0.1); }
-    .input-style { background: rgba(0,0,0,0.3); border: 1px solid rgba(16, 185, 129, 0.2); padding: 12px; border-radius: 12px; outline: none; width: 100%; transition: 0.3s; color: white; }
-    .input-style:focus { border-color: #34d399; box-shadow: 0 0 15px rgba(52, 211, 153, 0.1); }
-    .btn-primary { background: linear-gradient(135deg, #10b981, #059669); color: #020617; font-weight: 800; padding: 12px; border-radius: 12px; transition: 0.3s; text-transform: uppercase; letter-spacing: 0.05em; }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3); }
+    .glass-box { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(20px); border: 1px solid rgba(16, 185, 129, 0.1); }
+    .input-style { background: rgba(0,0,0,0.3); border: 1px solid rgba(16, 185, 129, 0.2); padding: 14px; border-radius: 16px; outline: none; width: 100%; transition: 0.3s; color: white; font-size: 13px; }
+    .input-style:focus { border-color: #34d399; box-shadow: 0 0 20px rgba(52, 211, 153, 0.1); }
+    .btn-primary { background: #10b981; color: #020617; font-weight: 900; padding: 14px; border-radius: 16px; transition: 0.3s; text-transform: uppercase; letter-spacing: 0.1em; font-size: 11px; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3); background: #34d399; }
     .multi-text { background: linear-gradient(to right, #34d399, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="p-6 md:p-12">
 
-<nav class="max-w-6xl mx-auto flex justify-between items-center mb-10">
-    <h1 class="text-2xl font-black multi-text">ZYNC <span class="text-white opacity-30 font-light ml-2">DASHBOARD</span></h1>
+<nav class="max-w-7xl mx-auto flex justify-between items-center mb-12">
     <div class="flex items-center gap-4">
-        <button onclick="window.open('profile.html?u=' + document.getElementById('username').value)" class="text-xs text-emerald-400 font-bold border border-emerald-500/30 px-4 py-2 rounded-full hover:bg-emerald-500/10 transition">View Live Profile</button>
-        <button onclick="logout()" class="text-red-400 text-xs font-bold uppercase tracking-widest">Logout</button>
+        <h1 class="text-3xl font-black multi-text tracking-tighter">ZYNC</h1>
+        <div id="protocol-status" class="px-3 py-1 rounded-full border border-white/10 text-[9px] font-black uppercase tracking-widest text-slate-500">Protocol Offline</div>
+    </div>
+    <div class="flex items-center gap-6">
+        <button onclick="logout()" class="text-red-400 text-[10px] font-black uppercase tracking-widest hover:opacity-70">Logout</button>
     </div>
 </nav>
 
-<div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+<div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10">
 
-    <div class="lg:col-span-4 space-y-6">
-        <div class="glass-box p-8 rounded-[2.5rem] text-center">
-            <div class="relative w-24 h-24 mx-auto mb-6 group">
-                <img id="avatar-preview" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Zync" class="w-24 h-24 rounded-full border-2 border-emerald-500/50 object-cover p-1">
-                <label class="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition">
-                    <span class="text-[10px] font-black">EDIT</span>
-                    <input type="file" id="avatar-input" class="hidden" accept="image/*">
-                </label>
+    <!-- LEFT COLUMN: LIVE GHOST PULSE -->
+    <div class="lg:col-span-5 space-y-8">
+        <div class="glass-box p-10 rounded-[3rem] border-emerald-500/20 shadow-2xl">
+            <h3 class="text-emerald-400 text-xs font-black uppercase tracking-[0.3em] mb-8">Ghost Pulse</h3>
+            
+            <div class="grid grid-cols-2 gap-4 mb-10 text-center">
+                <div class="p-6 bg-black/40 rounded-3xl border border-white/5">
+                    <p class="text-[9px] text-slate-500 font-bold uppercase mb-1">Live Frequency</p>
+                    <h4 id="active-count" class="text-4xl font-black text-white">0</h4>
+                    <p class="text-[8px] text-emerald-500 font-black uppercase mt-1">Users Online</p>
+                </div>
+                <div class="p-6 bg-black/40 rounded-3xl border border-white/5">
+                    <p class="text-[9px] text-slate-500 font-bold uppercase mb-1">Total Zyncs</p>
+                    <h4 id="total-zyncs" class="text-4xl font-black text-white">0</h4>
+                    <p class="text-[8px] text-blue-400 font-black uppercase mt-1">Links Created</p>
+                </div>
             </div>
 
-            <div class="space-y-4 text-left">
-                <div>
-                    <label class="text-[10px] uppercase tracking-widest text-emerald-500 font-bold ml-1">Username</label>
-                    <input id="username" type="text" placeholder="username" class="input-style mt-1">
+            <div class="space-y-4">
+                <p class="text-[10px] text-slate-400 font-medium italic mb-4">Generate a professional, one-time link for private discussion:</p>
+                <button onclick="initiateGhostProtocol()" class="btn-primary w-full">Initialize Ghost Session</button>
+                
+                <div id="ghost-link-vault" class="mt-8 space-y-3">
+                    <!-- Links appear here -->
                 </div>
-                <div>
-                    <label class="text-[10px] uppercase tracking-widest text-emerald-500 font-bold ml-1">Display Name</label>
-                    <input id="display_name" type="text" placeholder="Your Name" class="input-style mt-1">
-                </div>
-                <div>
-                    <label class="text-[10px] uppercase tracking-widest text-emerald-500 font-bold ml-1">Bio</label>
-                    <textarea id="bio" placeholder="Tell the world..." class="input-style mt-1 h-24 resize-none"></textarea>
-                </div>
-                <button onclick="saveProfile()" class="btn-primary w-full mt-2">Sync Profile</button>
             </div>
         </div>
     </div>
 
-    <div class="lg:col-span-8 space-y-8">
-
-        <div class="glass-box p-8 rounded-[2.5rem]">
-            <h3 class="text-blue-400 text-xs font-black uppercase tracking-[0.2em] mb-6">Social Networks</h3>
-            <div class="flex flex-col md:flex-row gap-3 mb-8">
-                <select id="link-platform" class="input-style md:w-1/3 bg-gray-900">
-                    <option value="Instagram">Instagram</option>
-                    <option value="TikTok">TikTok</option>
-                    <option value="WhatsApp">WhatsApp</option>
-                    <option value="Telegram">Telegram</option>
-                    <option value="X">X (Twitter)</option>
-                    <option value="Spotify">Spotify</option>
-                </select>
-                <input id="link-url" placeholder="Paste URL here..." class="input-style flex-1">
-                <button onclick="addLink()" class="btn-primary px-8">Add</button>
+    <!-- RIGHT COLUMN: PROFILE SYNC -->
+    <div class="lg:col-span-7 space-y-8">
+        <div class="glass-box p-10 rounded-[3rem]">
+            <h3 class="text-blue-400 text-xs font-black uppercase tracking-[0.3em] mb-8">Architect Profile</h3>
+            
+            <div class="flex items-center gap-8 mb-10">
+                <div class="relative group">
+                    <img id="avatar-img" src="https://api.dicebear.com" class="w-24 h-24 rounded-full border-2 border-emerald-500/30 p-1 object-cover">
+                    <div class="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer">
+                        <span class="text-[9px] font-black">EDIT</span>
+                    </div>
+                </div>
+                <div class="flex-1 space-y-4">
+                    <input id="display-name" type="text" placeholder="Display Name" class="input-style">
+                    <textarea id="user-bio" placeholder="Digital Frequency Bio..." class="input-style h-20 resize-none"></textarea>
+                </div>
             </div>
-            <div id="links-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            
+            <button class="btn-primary w-full bg-blue-500 text-white">Update Digital Identity</button>
         </div>
-
-        <div class="glass-box p-8 rounded-[2.5rem]">
-            <h3 class="text-purple-400 text-xs font-black uppercase tracking-[0.2em] mb-6">Your Top Picks (Recs)</h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-8">
-                <select id="rec-cat" class="input-style bg-gray-900">
-                    <option value="music">🎧 Music</option>
-                    <option value="app">🚀 App</option>
-                    <option value="movie">🎬 Movie</option>
-                    <option value="snack">🍬 Snack</option>
-                </select>
-                <input id="rec-name" placeholder="Name" class="input-style md:col-span-2">
-                <select id="rec-rating" class="input-style bg-gray-900">
-                    <option value="5">⭐⭐⭐⭐⭐</option>
-                    <option value="4">⭐⭐⭐⭐</option>
-                    <option value="3">⭐⭐⭐</option>
-                    <option value="2">⭐⭐</option>
-                    <option value="1">⭐</option>
-                </select>
-                <button onclick="addRec()" class="btn-primary md:col-span-4">Add Recommendation</button>
-            </div>
-            <div id="recs-container" class="space-y-3"></div>
-        </div>
-
     </div>
 </div>
 
 <script>
-const SUPABASE_URL = "https://dkqafrwchifzpftxhqwp.supabase.co";
-const SUPABASE_KEY = "sb_publishable_lSLvTgFSNcTWxnZhpW2YQA_p1rEtRXw";
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // 1. ABLY CONFIGURATION (Professional Messaging Engine)
+    const ABLY_KEY = 'YOUR_ABLY_KEY_HERE'; // Get free at [Ably.com](https://ably.com)
+    let realtime, ghostChannel, myId;
 
-let currentUser = null;
+    async function initProtocol() {
+        myId = 'ADMIN-' + Math.random().toString(36).substr(2, 5);
+        realtime = new Ably.Realtime({ key: ABLY_KEY, clientId: myId });
 
-// INIT DASHBOARD
-async function init() {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) { window.location.href = "login.html"; return; }
-    currentUser = user;
-    loadDashboardData();
-}
+        // 2. LIVE PRESENCE: Tracking Activity
+        const pulse = realtime.channels.get('zync-global-discovery');
+        pulse.presence.subscribe(() => {
+            pulse.presence.get((err, members) => {
+                if(!err) document.getElementById('active-count').innerText = members.length;
+            });
+        });
+        pulse.presence.enter();
 
-// PROFILE LOAD
-async function loadDashboardData() {
-    const { data: profile } = await supabaseClient.from('users').select('*').eq('id', currentUser.id).single();
-    if(profile) {
-        document.getElementById('username').value = profile.username || "";
-        document.getElementById('display_name').value = profile.display_name || "";
-        document.getElementById('bio').value = profile.bio || "";
-        if(profile.avatar_url) document.getElementById('avatar-preview').src = profile.avatar_url;
+        // 3. CONNECTION STATUS
+        realtime.connection.on('connected', () => {
+            const status = document.getElementById('protocol-status');
+            status.innerText = "Protocol Online";
+            status.classList.replace('text-slate-500', 'text-emerald-400');
+            status.classList.add('border-emerald-500/50');
+        });
     }
 
-    const { data: links } = await supabaseClient.from('links').select('*').eq('user_id', currentUser.id);
-    const { data: recs } = await supabaseClient.from('recommendations').select('*').eq('user_id', currentUser.id);
+    // 4. GHOST LINK GENERATION (Deactivates after first use)
+    let zyncCount = 0;
+    function initiateGhostProtocol() {
+        const sessionId = 'ZN-' + Math.random().toString(36).substr(2, 9);
+        const ghostURL = window.location.origin + '/ghost-chat.html?session=' + sessionId;
+        
+        // Register Admin Security
+        localStorage.setItem(`zync_admin_${sessionId}`, 'true');
+        zyncCount++;
+        document.getElementById('total-zyncs').innerText = zyncCount;
 
-    renderLinks(links || []);
-    renderRecs(recs || []);
-}
-
-// PROFILE SAVE
-async function saveProfile() {
-    const avatarFile = document.getElementById('avatar-input').files[0];
-    let avatar_url = null;
-
-    if(avatarFile){
-        const { data, error } = await supabaseClient.storage.from('avatars').upload(`avatars/${currentUser.id}_${Date.now()}`, avatarFile, { upsert: true });
-        if(data) avatar_url = supabaseClient.storage.from('avatars').getPublicUrl(data.path).publicUrl;
+        const vault = document.getElementById('ghost-link-vault');
+        const linkCard = document.createElement('div');
+        linkCard.className = "p-5 bg-black/40 rounded-2xl border border-white/5 flex flex-col gap-3 animate-pulse";
+        linkCard.innerHTML = `
+            <div class="flex justify-between items-center">
+                <span class="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Single-Use Session</span>
+                <span class="text-[8px] text-slate-500">Active Now</span>
+            </div>
+            <code class="text-[10px] text-slate-300 truncate font-mono">${ghostURL}</code>
+            <button onclick="copyLink('${ghostURL}')" class="text-[9px] font-bold bg-white/5 py-2 rounded-lg border border-white/10 hover:bg-emerald-500 hover:text-black transition">COPY DISPOSABLE LINK</button>
+        `;
+        vault.prepend(linkCard);
     }
 
-    const updates = {
-        id: currentUser.id,
-        username: document.getElementById('username').value,
-        display_name: document.getElementById('display_name').value,
-        bio: document.getElementById('bio').value
-    };
+    function copyLink(url) {
+        navigator.clipboard.writeText(url);
+        alert("GHOST LINK COPIED: This link will DEACTIVATE after the first non-admin entry.");
+    }
 
-    if(avatar_url) updates.avatar_url = avatar_url;
+    function logout() {
+        if(confirm("Terminate protocol and logout?")) {
+            window.location.href = 'login.html';
+        }
+    }
 
-    const { error } = await supabaseClient.from('users').upsert(updates);
-    if(error) alert(error.message); else { alert("Zync Profile Updated!"); loadDashboardData(); }
-}
-
-// ADD LINK
-async function addLink() {
-    const platform = document.getElementById('link-platform').value;
-    const url = document.getElementById('link-url').value;
-    if(!url) return;
-    await supabaseClient.from('links').insert([{ user_id: currentUser.id, platform, url }]);
-    document.getElementById('link-url').value = "";
-    loadDashboardData();
-}
-
-// ADD RECOMMENDATION
-async function addRec() {
-    const category = document.getElementById('rec-cat').value;
-    const name = document.getElementById('rec-name').value;
-    const rating = parseInt(document.getElementById('rec-rating').value);
-    if(!name) return;
-    await supabaseClient.from('recommendations').insert([{ user_id: currentUser.id, category, name, rating }]);
-    document.getElementById('rec-name').value = "";
-    loadDashboardData();
-}
-
-// RENDER LINKS & RECS
-function renderLinks(links) {
-    const container = document.getElementById('links-container');
-    container.innerHTML = links.map(l => `
-        <div class="flex justify-between items-center bg-emerald-500/5 border border-emerald-500/10 p-4 rounded-2xl">
-            <div>
-                <p class="text-[10px] font-bold text-emerald-400 uppercase">${l.platform}</p>
-                <p class="text-xs truncate max-w-[150px] opacity-60">${l.url}</p>
-            </div>
-            <button onclick="deleteItem('links','${l.id}')" class="text-red-500/50 hover:text-red-500 text-xs">Delete</button>
-        </div>
-    `).join('');
-}
-
-function renderRecs(recs) {
-    const container = document.getElementById('recs-container');
-    container.innerHTML = recs.map(r => `
-        <div class="flex justify-between items-center bg-white/5 p-4 rounded-2xl border border-white/5">
-            <div class="flex gap-4 items-center">
-                <span class="text-xl">${r.category==='music'?'🎧':r.category==='app'?'🚀':r.category==='movie'?'🎬':'🍬'}</span>
-                <div>
-                    <p class="font-bold text-sm">${r.name}</p>
-                    <p class="text-xs text-emerald-400">${'⭐'.repeat(r.rating)}</p>
-                </div>
-            </div>
-            <button onclick="deleteItem('recommendations','${r.id}')" class="text-red-500/50 text-xs">Delete</button>
-        </div>
-    `).join('');
-}
-
-// DELETE ITEM
-async function deleteItem(table, id){
-    await supabaseClient.from(table).delete().eq('id', id);
-    loadDashboardData();
-}
-
-// LOGOUT
-function logout(){
-    supabaseClient.auth.signOut().then(()=>window.location.href="login.html");
-}
-
-// AVATAR PREVIEW
-document.getElementById('avatar-input').addEventListener('change', e=>{
-    const file = e.target.files[0];
-    if(file) document.getElementById('avatar-preview').src = URL.createObjectURL(file);
-});
-
-init();
+    // Start everything
+    initProtocol();
 </script>
 </body>
 </html>
