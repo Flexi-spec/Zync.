@@ -1,122 +1,159 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Explore | Zync Discovery</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-    body {
-        background: radial-gradient(circle at bottom right, #064e3b, #020617);
-        min-height: 100vh;
-        color: #ecfdf5;
-        font-family: 'Inter', sans-serif;
-    }
-    .glass-card {
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(16, 185, 129, 0.1);
-        transition: all 0.3s ease;
-    }
-    .glass-card:hover {
-        border-color: rgba(16, 185, 129, 0.5);
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    }
-    .search-glow:focus {
-        box-shadow: 0 0 20px rgba(52, 211, 153, 0.2);
-        border-color: #34d399;
-    }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XENONLINK | Ghost Workspace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- ABLY CORE & CHAT SDKs -->
+    <script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
+    <script src="https://cdn.ably.com/lib/ably-chat.umd.cjs-0.js"></script>
+    <style>
+        body { background: #020617; color: #f8fafc; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; }
+        .hero-gradient { background: linear-gradient(135deg, #34d399 0%, #3b82f6 50%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .glass-panel { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(20px); border: 1px solid rgba(16, 185, 129, 0.1); }
+        #msg-stream::-webkit-scrollbar { width: 4px; }
+        #msg-stream::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
+        .msg-own { background: #10b981; color: #000; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .msg-guest { background: rgba(255,255,255,0.05); align-self: flex-start; border-bottom-left-radius: 2px; border: 1px solid rgba(255,255,255,0.1); }
+    </style>
 </head>
-<body class="p-6">
+<body class="flex items-center justify-center h-screen p-6">
 
-<header class="max-w-6xl mx-auto mb-12 text-center pt-10">
-    <h1 class="text-4xl md:text-5xl font-black mb-4">Discover <span class="text-emerald-400">Zyncers</span></h1>
-    <p class="text-gray-400 mb-8">Find people with the same taste in music, apps, and snacks.</p>
-
-    <div class="relative max-w-xl mx-auto">
-        <input type="text" id="search-input" placeholder="Search by username or bio..." 
-               class="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none search-glow transition-all pl-14">
-        <span class="absolute left-5 top-5 text-gray-500">🔍</span>
-    </div>
-</header>
-
-<main class="max-w-6xl mx-auto">
-    <div class="flex justify-between items-center mb-8">
-        <h2 class="text-xl font-bold border-l-4 border-emerald-500 pl-4">Featured Profiles</h2>
-        <div class="flex gap-2">
-            <button data-cat="all" class="filter-btn px-4 py-2 bg-emerald-500/10 text-emerald-400 rounded-lg text-sm border border-emerald-500/20">All</button>
-            <button data-cat="music" class="filter-btn px-4 py-2 bg-white/5 text-gray-400 rounded-lg text-sm border border-white/10 hover:bg-white/10">Music</button>
-            <button data-cat="tech" class="filter-btn px-4 py-2 bg-white/5 text-gray-400 rounded-lg text-sm border border-white/10 hover:bg-white/10">Tech</button>
+    <!-- LOBBY SCREEN -->
+    <div id="setup-ui" class="glass-panel max-w-lg w-full p-12 rounded-[3rem] text-center shadow-2xl">
+        <h1 class="text-5xl font-black hero-gradient mb-4 tracking-tighter">ZYNC</h1>
+        <p class="text-slate-400 text-sm mb-10 italic">"Frequency Synced. No Footprint Left Behind."</p>
+        <div class="space-y-4">
+            <input id="user-display-name" type="text" placeholder="Your Professional Alias" class="w-full bg-black/40 border border-white/10 p-5 rounded-2xl outline-none focus:border-emerald-500">
+            <button onclick="createGhostSession()" class="w-full bg-emerald-500 text-black font-black p-5 rounded-2xl hover:brightness-110 transition uppercase tracking-widest text-xs">Initialize Ghost Link</button>
+        </div>
+        <div id="link-box" class="hidden mt-8 p-6 border border-dashed border-emerald-500/30 rounded-2xl bg-black/20">
+            <code id="ghost-url" class="text-[10px] text-slate-300 break-all font-mono"></code>
+            <button onclick="copyAndJoin()" class="block w-full mt-4 text-[10px] font-bold text-emerald-400 underline">Copy & Enter Frequency</button>
         </div>
     </div>
 
-    <div id="profiles-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-</main>
-
-<script>
-const SUPABASE_URL = "https://dkqafrwchifzpftxhqwp.supabase.co";
-const SUPABASE_KEY = "sb_publishable_lSLvTgFSNcTWxnZhpW2YQA_p1rEtRXw";
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-let allUsers = [];
-
-// Render Profiles
-function renderProfiles(users) {
-    const grid = document.getElementById('profiles-grid');
-    grid.innerHTML = users.map(u => `
-        <a href="profile.html?u=${u.username}" class="glass-card p-6 rounded-3xl flex items-center gap-4">
-            <img src="${u.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + u.username}" class="w-16 h-16 rounded-full bg-emerald-900/50">
+    <!-- WORKSPACE SCREEN -->
+    <div id="workspace-ui" class="hidden glass-panel w-full max-w-6xl h-[90vh] rounded-[3rem] flex flex-col overflow-hidden shadow-2xl">
+        <header class="p-8 border-b border-white/5 flex justify-between items-center bg-white/2">
             <div>
-                <h3 class="font-bold text-lg">${u.display_name || u.username}</h3>
-                <p class="text-emerald-400 text-sm font-mono">@${u.username}</p>
-                <p class="text-gray-500 text-xs mt-1 italic">${u.bio || ''}</p>
+                <h2 class="font-black hero-gradient text-2xl tracking-tighter">GHOST PROTOCOL</h2>
+                <div class="flex items-center gap-2 mt-1">
+                    <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                    <p id="presence-stat" class="text-[10px] text-emerald-400 font-bold uppercase tracking-[0.2em]">Presence: 1 Syncing</p>
+                </div>
             </div>
-        </a>
-    `).join('');
-}
+            <button onclick="location.href=window.location.pathname" class="text-[10px] font-black bg-red-500/10 text-red-400 px-6 py-3 rounded-xl border border-red-500/20 hover:bg-red-500 hover:text-white transition uppercase">Terminate Session</button>
+        </header>
 
-// Fetch Users
-async function loadExplore() {
-    const { data: users } = await supabaseClient
-        .from('users')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
+        <div id="msg-stream" class="flex-1 overflow-y-auto p-10 space-y-6 flex flex-col"></div>
+        <div id="typing-alert" class="px-10 h-6 text-[10px] font-bold text-emerald-500 italic uppercase"></div>
 
-    if (users) {
-        allUsers = users;
-        renderProfiles(users);
-    }
-}
+        <footer class="p-8 bg-white/2 border-t border-white/5 flex gap-4">
+            <input id="chat-input" type="text" placeholder="Transmit your frequency..." class="flex-1 bg-black/40 border border-white/10 p-5 rounded-2xl outline-none focus:border-emerald-500 text-white" oninput="sendTyping()">
+            <button onclick="transmit()" class="bg-emerald-500 text-black font-black px-10 rounded-2xl hover:brightness-110 uppercase tracking-widest text-xs">Transmit</button>
+        </footer>
+    </div>
 
-// Search Logic
-document.getElementById('search-input').addEventListener('input', (e) => {
-    const query = e.target.value.toLowerCase();
-    const filtered = allUsers.filter(u => 
-        (u.username && u.username.toLowerCase().includes(query)) || 
-        (u.display_name && u.display_name.toLowerCase().includes(query)) ||
-        (u.bio && u.bio.toLowerCase().includes(query))
-    );
-    renderProfiles(filtered);
-});
+    <script>
+        // REPLACE WITH YOUR KEY FROM https://ably.com
+        const ABLY_KEY = 'YOUR_API_KEY'; 
+        let realtime, chatClient, room, myId, myName;
 
-// Filter Buttons
-document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const cat = btn.dataset.cat;
-        let filtered = allUsers;
-
-        if(cat !== 'all') {
-            filtered = allUsers.filter(u => u.favorite_category === cat);
+        // 1. GHOST LINK GENERATION
+        function createGhostSession() {
+            myName = document.getElementById('user-display-name').value.trim() || 'Architect';
+            const sessionId = 'ZN-' + Math.random().toString(36).substr(2, 9);
+            const url = window.location.origin + window.location.pathname + '?session=' + sessionId;
+            document.getElementById('ghost-url').innerText = url;
+            document.getElementById('link-box').classList.remove('hidden');
+            localStorage.setItem(`zync_admin_${sessionId}`, 'true');
         }
-        renderProfiles(filtered);
-    });
-});
 
-loadExplore();
-</script>
+        function copyAndJoin() {
+            navigator.clipboard.writeText(document.getElementById('ghost-url').innerText);
+            window.location.href = document.getElementById('ghost-url').innerText;
+        }
+
+        // 2. INITIALIZE GHOST WORKSPACE
+        async function initGhostProtocol() {
+            const params = new URLSearchParams(window.location.search);
+            const sessionId = params.get('session');
+            if(!sessionId) return;
+
+            // One-Time Deactivation Logic
+            const isAdmin = localStorage.getItem(`zync_admin_${sessionId}`);
+            if (!isAdmin && sessionStorage.getItem(`zync_burned_${sessionId}`)) {
+                document.body.innerHTML = "<div class='text-center'><h1 class='text-emerald-500 font-black text-6xl'>403</h1><p class='text-slate-500 font-bold uppercase tracking-widest'>Link Deactivated</p></div>";
+                return;
+            }
+            if (!isAdmin) sessionStorage.setItem(`zync_burned_${sessionId}`, 'true');
+
+            document.getElementById('setup-ui').style.display = 'none';
+            document.getElementById('workspace-ui').classList.remove('hidden');
+
+            myId = 'XL-' + Math.random().toString(36).substr(2, 5);
+            realtime = new Ably.Realtime({ key: ABLY_KEY, clientId: myId });
+            chatClient = new AblyChat.ChatClient(realtime);
+            room = await chatClient.rooms.get(sessionId);
+
+            await room.attach();
+
+            // PRESENCE: Live Status
+            room.presence.subscribe(() => {
+                room.presence.get().then(m => document.getElementById('presence-stat').innerText = `Presence: ${m.length} Syncing`);
+            });
+            room.presence.enter({ name: myName });
+
+            // HISTORY & MESSAGES
+            room.messages.subscribe((event) => {
+                if (event.type === 'message') render(event.message, event.message.clientId === myId ? 'own' : 'guest');
+                else if (event.type === 'message.deleted') document.getElementById(event.message.serial)?.remove();
+                else if (event.type === 'message.updated') {
+                    const el = document.getElementById(event.message.serial);
+                    if (el) el.querySelector('.text-body').innerText = event.message.text + " (edited)";
+                }
+            });
+
+            // TYPING INDICATORS
+            room.typing.subscribe(e => {
+                document.getElementById('typing-alert').innerText = e.currentlyTyping.size > 0 ? "Transmission in progress..." : "";
+            });
+        }
+
+        // 3. ACTIONS: SEND, EDIT, DELETE
+        async function transmit() {
+            const input = document.getElementById('chat-input');
+            if(!input.value) return;
+            await room.messages.send({ text: input.value });
+            input.value = '';
+        }
+
+        function render(msg, type) {
+            const stream = document.getElementById('msg-stream');
+            const div = document.createElement('div');
+            div.id = msg.serial;
+            div.className = `max-w-[70%] p-6 rounded-[2.5rem] shadow-xl ${type === 'own' ? 'msg-own' : 'msg-guest'}`;
+            div.innerHTML = `
+                <p class="text-body font-medium">${msg.text}</p>
+                <div class="mt-4 flex gap-4 opacity-40 text-[9px] font-black uppercase tracking-widest">
+                    <button onclick="editMsg('${msg.serial}')" class="hover:text-white transition">Edit</button>
+                    <button onclick="room.messages.delete('${msg.serial}')" class="hover:text-red-400 transition">Delete</button>
+                </div>
+            `;
+            stream.appendChild(div);
+            stream.scrollTop = stream.scrollHeight;
+        }
+
+        async function editMsg(serial) {
+            const newText = prompt("Edit transmission:");
+            if (newText) await room.messages.update(serial, { text: newText });
+        }
+
+        function sendTyping() { room.typing.keystroke(); }
+
+        if(window.location.search.includes('session=')) initGhostProtocol();
+    </script>
 </body>
 </html>
