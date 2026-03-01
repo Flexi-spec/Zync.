@@ -1,154 +1,180 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zync | Originator Command</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-  body { background: #020617; color: #f8fafc; font-family: 'Inter', sans-serif; }
-  .glass-card { background: rgba(255,255,255,0.02); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
-  .owner-gradient { background: linear-gradient(to right,#3b82f6,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-  .status-online { height:8px;width:8px;background:#10b981;border-radius:50%;box-shadow:0 0 10px #10b981; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XenonLink | Originator Command</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- ABLY REALTIME SDK -->
+    <script src="https://cdn.ably.com"></script>
+    <style>
+        :root { --neon-blue: #3b82f6; --neon-green: #10b981; --neon-red: #ef4444; }
+        body { background: #020617; color: #f8fafc; font-family: 'Inter', sans-serif; overflow: hidden; }
+        .glass { background: rgba(255,255,255,0.02); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.05); }
+        .owner-gradient { background: linear-gradient(to right, var(--neon-blue), #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .status-pulse { height: 10px; width: 10px; background: var(--neon-green); border-radius: 50%; box-shadow: 0 0 15px var(--neon-green); animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.2); } }
+        #activity-log::-webkit-scrollbar { width: 4px; }
+        #activity-log::-webkit-scrollbar-thumb { background: var(--neon-blue); border-radius: 10px; }
+    </style>
 </head>
-<body class="p-8">
+<body class="p-6 md:p-12">
 
-<div id="login-screen" class="max-w-md mx-auto space-y-6">
-  <h1 class="text-2xl font-bold text-center">Zync Admin Login</h1>
-  <input id="email" type="email" placeholder="Email" class="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:outline-none">
-  <input id="password" type="password" placeholder="Password" class="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:outline-none">
-  <button onclick="signIn()" class="w-full bg-blue-500 hover:bg-blue-600 py-3 rounded-xl font-bold">Sign In</button>
-  <p id="login-error" class="text-red-500 text-sm text-center"></p>
-</div>
-
-<div id="dashboard" style="display:none;">
-  <div class="max-w-7xl mx-auto">
-    <header class="flex justify-between items-center mb-12">
-      <div>
-        <h1 class="text-3xl font-black tracking-tighter owner-gradient">COMMAND_CENTER</h1>
-        <p class="text-[10px] uppercase tracking-[0.4em] opacity-40">Authorized Personnel Only // Flexi Rank</p>
-      </div>
-      <div class="glass-card px-6 py-3 rounded-2xl flex items-center gap-4">
-        <div class="status-online"></div>
-        <span class="text-xs font-bold tracking-widest">LIVE USERS: <span id="user-count">0</span></span>
-      </div>
-    </header>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div class="lg:col-span-1 space-y-8">
-        <div class="glass-card p-8 rounded-[2rem]">
-          <h3 class="text-xs font-black uppercase tracking-widest mb-6 opacity-60">Global Broadcast</h3>
-          <textarea id="broadcast-msg" placeholder="Force sync message to all devices..." 
-            class="w-full h-32 bg-white/5 border border-white/10 rounded-xl p-4 text-sm outline-none focus:border-blue-500/50 transition resize-none"></textarea>
-          <button onclick="sendBroadcast()" class="w-full mt-4 bg-white text-black py-4 rounded-xl font-bold uppercase text-[10px] tracking-[0.2em] hover:bg-blue-500 hover:text-white transition">
-            Broadcast Sync
-          </button>
+    <!-- AUTH GATE: Pure Client-Side Admin Key -->
+    <div id="auth-gate" class="fixed inset-0 z-50 bg-[#020617] flex items-center justify-center p-6">
+        <div class="glass max-w-md w-full p-10 rounded-[3rem] text-center shadow-2xl">
+            <h1 class="text-4xl font-black mb-2 owner-gradient tracking-tighter">XENONLINK</h1>
+            <p class="text-[10px] uppercase tracking-[0.4em] opacity-40 mb-10">Originator Key Required</p>
+            <input id="admin-key" type="password" placeholder="Enter Protocol Key" class="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none focus:border-blue-500 text-center text-sm mb-6">
+            <button onclick="bootCommandCenter()" class="w-full bg-blue-600 text-white font-black p-5 rounded-2xl hover:bg-blue-500 transition uppercase tracking-widest text-[10px]">Initialize Command</button>
         </div>
-        <div class="glass-card p-8 rounded-[2rem]">
-          <h3 class="text-xs font-black uppercase tracking-widest mb-6 opacity-60">System Health</h3>
-          <div class="space-y-4">
-            <div class="flex justify-between text-[10px] font-bold"><span>DATABASE</span><span class="text-emerald-500">OPTIMAL</span></div>
-            <div class="flex justify-between text-[10px] font-bold"><span>NEURAL_LINK</span><span class="text-emerald-500">ACTIVE</span></div>
-            <div class="flex justify-between text-[10px] font-bold"><span>ENCRYPTION</span><span class="text-blue-500">AES-256</span></div>
-          </div>
-        </div>
-      </div>
-      <div class="lg:col-span-2">
-        <div class="glass-card p-8 rounded-[2rem] h-full">
-          <h3 class="text-xs font-black uppercase tracking-widest mb-6 opacity-60">Zync Registry Activity</h3>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left">
-              <thead class="text-[10px] uppercase tracking-widest opacity-30 border-b border-white/5">
-                <tr>
-                  <th class="pb-4">User</th>
-                  <th class="pb-4">Status</th>
-                  <th class="pb-4 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody id="user-table" class="text-sm"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
-</div>
 
-<script>
-  // Supabase client
-  const SUPABASE_URL = "https://dkqafrwchifzpftxhqwp.supabase.co";
-  const SUPABASE_ANON_KEY = "sb_publishable_lSLvTgFSNcTWxnZhpW2YQA_p1rEtRXw";
-  const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    <!-- COMMAND CENTER UI -->
+    <div id="command-center" class="hidden max-w-7xl mx-auto space-y-10 opacity-0 transition-opacity duration-1000">
+        <header class="flex justify-between items-center">
+            <div>
+                <h1 class="text-4xl font-black owner-gradient tracking-tighter">COMMAND_CENTER</h1>
+                <p class="text-[10px] uppercase tracking-[0.4em] opacity-40 italic">FLEXI RANK // Real-time Administrative Shard</p>
+            </div>
+            <div class="glass px-8 py-4 rounded-[2rem] flex items-center gap-8">
+                <div class="status-pulse"></div>
+                <div class="flex flex-col">
+                    <span class="text-[10px] font-black tracking-widest uppercase opacity-50 text-emerald-400">Signal: Optimal</span>
+                    <span class="text-xs font-black tracking-widest uppercase">Users: <span id="user-count" class="text-blue-400">0</span></span>
+                </div>
+                <button onclick="location.reload()" class="text-red-500 font-black text-[9px] uppercase border-l border-white/10 pl-8 hover:opacity-50 transition">Disconnect</button>
+            </div>
+        </header>
 
-  // Sign in function
-  async function signIn() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- LEFT: BROADCAST & GHOST TOOLS -->
+            <div class="lg:col-span-4 space-y-8">
+                <div class="glass p-10 rounded-[3.5rem]">
+                    <h3 class="text-[10px] font-black uppercase tracking-widest mb-6 text-blue-400">Global Force Sync</h3>
+                    <textarea id="broadcast-msg" placeholder="Force broadcast to all active ghost frequencies..." class="w-full h-32 bg-white/5 border border-white/10 rounded-2xl p-5 text-xs outline-none focus:border-blue-500/50 transition resize-none"></textarea>
+                    <button onclick="sendGlobalBroadcast()" class="w-full mt-4 bg-white text-black py-4 rounded-2xl font-black uppercase text-[10px] tracking-[0.3em] hover:bg-blue-500 hover:text-white transition">Broadcast Sync</button>
+                </div>
 
-    if(error){
-      document.getElementById('login-error').innerText = error.message;
-      return;
-    }
+                <div class="glass p-10 rounded-[3.5rem]">
+                    <h3 class="text-[10px] font-black uppercase tracking-widest mb-6 text-emerald-400">Ghost Link Generator</h3>
+                    <p class="text-[9px] opacity-40 mb-4 uppercase tracking-widest">Create a single-use deactivated link</p>
+                    <button onclick="createGhostLink()" class="w-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 py-4 rounded-2xl font-black uppercase text-[10px] tracking-[0.3em] hover:bg-emerald-500 hover:text-black transition">Create Disposable Link</button>
+                    <div id="link-box" class="mt-4 p-4 bg-black/40 rounded-xl hidden">
+                        <code id="ghost-output" class="text-[9px] break-all text-slate-400 font-mono"></code>
+                    </div>
+                </div>
+            </div>
 
-    // Check if user is admin (role stored in users table)
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('id, username, roles')
-      .eq('id', data.user.id)
-      .single();
+            <!-- RIGHT: ACTIVITY REGISTRY -->
+            <div class="lg:col-span-8">
+                <div class="glass p-10 rounded-[3.5rem] h-full min-h-[600px] flex flex-col">
+                    <h3 class="text-[10px] font-black uppercase tracking-widest mb-8 opacity-40">Live Pulse Registry</h3>
+                    <div class="flex-1 overflow-y-auto" id="activity-log">
+                        <table class="w-full text-left">
+                            <thead class="text-[10px] uppercase tracking-widest opacity-20 border-b border-white/5">
+                                <tr>
+                                    <th class="pb-6">Target Client</th>
+                                    <th class="pb-6">Status</th>
+                                    <th class="pb-6 text-right">Administrative Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="user-registry" class="text-xs">
+                                <!-- Members auto-injected via Ably Presence -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    if(userError || !userData.roles.includes('admin')){
-      document.getElementById('login-error').innerText = "Unauthorized access.";
-      await supabase.auth.signOut();
-      return;
-    }
+    <script>
+        // 1. ABLY CONFIGURATION
+        const ABLY_KEY = '9zundg.NEZh_w:mwZaZiYQgTY72hVVCu1ia-D58vqNNpirS2S1p3R11UE'; 
+        let ably, channel, myAdminId;
 
-    // Show dashboard
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-    loadUsers();
-  }
+        function bootCommandCenter() {
+            const keyInput = document.getElementById('admin-key').value;
+            if(!keyInput || ABLY_KEY.includes('YOUR')) {
+                alert("Please insert your [Ably API Key](https://ably.com) into the code!");
+                return;
+            }
 
-  // MOCK DATA - Replace with Supabase fetch
-  const mockUsers = [
-    { id: 1, name: 'stacy_vibe', status: 'Active', color: 'text-emerald-400' },
-    { id: 2, name: 'shadow_user', status: 'Suspicious', color: 'text-yellow-400' },
-    { id: 3, name: 'glitch_trap', status: 'Active', color: 'text-emerald-400' }
-  ];
+            // Initialization UI
+            document.getElementById('auth-gate').style.display = 'none';
+            const cmd = document.getElementById('command-center');
+            cmd.classList.remove('hidden');
+            setTimeout(() => cmd.style.opacity = '1', 10);
 
-  function loadUsers() {
-    const table = document.getElementById('user-table');
-    table.innerHTML = mockUsers.map(user => `
-      <tr class="border-b border-white/5 group">
-        <td class="py-4 font-bold">${user.name}</td>
-        <td class="py-4 text-[10px] uppercase font-black ${user.color}">${user.status}</td>
-        <td class="py-4 text-right">
-          <button onclick="blockUser(${user.id})" class="text-[9px] font-black uppercase tracking-widest bg-red-500/10 text-red-500 px-3 py-1 rounded-lg hover:bg-red-500 hover:text-white transition">
-            Banish
-          </button>
-        </td>
-      </tr>
-    `).join('');
-    document.getElementById('user-count').innerText = mockUsers.length + 142;
-  }
+            myAdminId = 'ORIGINATOR-' + Math.random().toString(36).substr(2, 5);
+            ably = new Ably.Realtime({ key: ABLY_KEY, clientId: myAdminId });
+            channel = ably.channels.get('zync-global-pulse');
 
-  async function blockUser(id) {
-    if(confirm("Banish this user from the Zync Shards forever?")) {
-      // Replace with real Supabase update to is_banned column
-      alert("User has been disconnected.");
-    }
-  }
+            // 2. LIVE PRESENCE: Monitoring checking activity
+            channel.presence.subscribe(() => {
+                channel.presence.get((err, members) => {
+                    if(!err) updateRegistryTable(members);
+                });
+            });
+            channel.presence.enter();
+        }
 
-  async function sendBroadcast() {
-    const msg = document.getElementById('broadcast-msg').value;
-    if(!msg) return;
-    // Replace with Supabase broadcast logic
-    alert("Broadcast Synced.");
-    document.getElementById('broadcast-msg').value = '';
-  }
-</script>
+        // 3. REGISTRY UPDATES
+        function updateRegistryTable(members) {
+            const table = document.getElementById('user-registry');
+            document.getElementById('user-count').innerText = members.length;
+            
+            table.innerHTML = members.map(m => {
+                if(m.clientId === myAdminId) return ''; // Don't show yourself
+                return `
+                <tr class="border-b border-white/5 group hover:bg-white/2 transition">
+                    <td class="py-6 font-black text-blue-400">@${m.clientId}</td>
+                    <td class="py-6 text-[9px] uppercase font-black text-emerald-500 tracking-widest flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> Synced
+                    </td>
+                    <td class="py-6 text-right">
+                        <button onclick="banishSignal('${m.clientId}')" class="bg-red-500/10 text-red-500 px-5 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition">
+                            Banish Signal
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        // 4. BANISHMENT: Remote Blocking Logic
+        function banishSignal(targetId) {
+            if(confirm(`Send remote Kill-Signal to ${targetId}? Session will be revoked immediately.`)) {
+                // Publish to [Ably Pub/Sub](https://ably.com)
+                channel.publish('kill-signal', { target: targetId });
+            }
+        }
+
+        // 5. GLOBAL BROADCAST
+        function sendGlobalBroadcast() {
+            const msg = document.getElementById('broadcast-msg').value;
+            if(!msg) return;
+            channel.publish('broadcast-msg', { text: msg, rank: 'FLEXI' });
+            document.getElementById('broadcast-msg').value = '';
+            alert("Broadcast Protocol: Global Sync Successfully Dispatched.");
+        }
+
+        // 6. GHOST LINK GENERATOR
+        function createGhostLink() {
+            const sid = 'XL-' + Math.random().toString(36).substr(2, 9);
+            const url = window.location.origin + '/chat.html?ghost=' + sid;
+            
+            // Mark link as Admin-created locally
+            localStorage.setItem(`admin_auth_${sid}`, 'true');
+            
+            const box = document.getElementById('link-box');
+            const output = document.getElementById('ghost-output');
+            box.classList.remove('hidden');
+            output.innerText = url;
+            
+            navigator.clipboard.writeText(url);
+            alert("GHOST LINK INITIALIZED: Link will deactivate upon first guest entry.");
+        }
+    </script>
 </body>
 </html>
